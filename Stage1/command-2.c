@@ -30,10 +30,8 @@ explicit or implicit, is provided.
 #include <sys/wait.h>
 #include <signal.h>
 
-#include <parse.h> // custom header file, contains a function that parses strings.
+#include <./parse.h> // custom header file, contains a function that parses strings.
 
-#define MAX_BUFFER 1024                        // max line buffer
-#define MAX_ARGS 64                            // max # args
 #define SEPARATORS " \t\n"                     // token separators
 
 int main (int argc, char ** argv)
@@ -43,7 +41,8 @@ int main (int argc, char ** argv)
 
     int status;               
     char ** args;                               // pointers to arg strings
-    char* buf;
+    int arg_count;
+    char buf[1024];
 
     char *path_buf;                             // path buffer
     long size;                                  // path size variable
@@ -57,17 +56,21 @@ int main (int argc, char ** argv)
     strcat(prompt, ": ");
     /* keep reading input until "quit" command or eof of redirected input */
     while (!feof(stdin)) { 
-        /* get command line from input */
+        printf("is segfault here?\n");
+	    /* get command line from input */
         fputs (prompt, stdout); // write prompt
-        if (fgets (buf, MAX_BUFFER, stdin )) { // read a line
+	printf("or perhaps here?\n");
+        if (fgets (buf, 1024, stdin)) { // read a line
             /* tokenize the input into args array */
             // arg = args;
             // *arg++ = strtok(buf,SEPARATORS);   // tokenise input
 
             // while ((*arg++ = strtok(NULL,SEPARATORS)));
-
-            parse(buf, args, argc); // should parse input string
-            
+	    printf("Where is segfault?");
+            parse(buf, args, &arg_count); // should parse input string
+            for(int i = 0; i < arg_count; i++){
+	        printf("%s\n", args[i]);
+	    }
             /*
             * cd implementation.
             * cd can only be executed in the parent process, executing it
@@ -129,7 +132,7 @@ int main (int argc, char ** argv)
                 
 
                 /* else pass command onto OS (or in this instance, print them out) */
-                arg = args;
+                //arg = args;
                 // while (*arg) {
                 //     fprintf(stdout,"%s ",*arg++);
                 //     fputs ("\n", stdout);
