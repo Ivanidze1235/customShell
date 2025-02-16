@@ -109,9 +109,10 @@ int main (int argc, char ** argv)
                         }
 
                         else if (!strcmp(args[0],"environ")){
-                            while(environ != NULL){
-                                printf("%s\n", environ);
-                                environ++;
+                            int i = 0;
+                            while(environ[i] != NULL){
+                                printf("%s\n", environ[i]);
+                                i++;
                             }
                         }
                         else{
