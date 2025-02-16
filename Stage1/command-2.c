@@ -30,6 +30,8 @@ explicit or implicit, is provided.
 #include <sys/wait.h>
 #include <signal.h>
 
+#include <parse.h> // custom header file, contains a function that parses strings.
+
 #define MAX_BUFFER 1024                        // max line buffer
 #define MAX_ARGS 64                            // max # args
 #define SEPARATORS " \t\n"                     // token separators
@@ -39,10 +41,10 @@ int main (int argc, char ** argv)
     pid_t pid = getpid();
     extern char** environ;
 
-    int status;
-    char buf[MAX_BUFFER];                       // line buffer
-    char * args[MAX_ARGS];                      // pointers to arg strings
-    char ** arg;			                    // working pointer thru args
+    int status;               
+    char ** args;                               // pointers to arg strings
+    char* buf;
+
     char *path_buf;                             // path buffer
     long size;                                  // path size variable
     char *path;                                 // stores path
@@ -59,12 +61,13 @@ int main (int argc, char ** argv)
         fputs (prompt, stdout); // write prompt
         if (fgets (buf, MAX_BUFFER, stdin )) { // read a line
             /* tokenize the input into args array */
-            arg = args;
-            *arg++ = strtok(buf,SEPARATORS);   // tokenise input
+            // arg = args;
+            // *arg++ = strtok(buf,SEPARATORS);   // tokenise input
 
-            while ((*arg++ = strtok(NULL,SEPARATORS)));
-            // last entry will be NULL 
+            // while ((*arg++ = strtok(NULL,SEPARATORS)));
 
+            parse(buf, args, argc); // should parse input string
+            
             /*
             * cd implementation.
             * cd can only be executed in the parent process, executing it
