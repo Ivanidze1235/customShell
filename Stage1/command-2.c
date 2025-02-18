@@ -56,21 +56,16 @@ int main (int argc, char ** argv)
     strcat(prompt, ": ");
     /* keep reading input until "quit" command or eof of redirected input */
     while (!feof(stdin)) { 
-        printf("is segfault here?\n");
 	    /* get command line from input */
         fputs (prompt, stdout); // write prompt
-	printf("or perhaps here?\n");
         if (fgets (buf, 1024, stdin)) { // read a line
             /* tokenize the input into args array */
             // arg = args;
             // *arg++ = strtok(buf,SEPARATORS);   // tokenise input
 
             // while ((*arg++ = strtok(NULL,SEPARATORS)));
-	    printf("Where is segfault?");
-            parse(buf, args, &arg_count); // should parse input string
-            for(int i = 0; i < arg_count; i++){
-	        printf("%s\n", args[i]);
-	    }
+            parse(buf, &args, &arg_count); // should parse input string
+
             /*
             * cd implementation.
             * cd can only be executed in the parent process, executing it
