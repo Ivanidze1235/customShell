@@ -63,9 +63,13 @@ int main (int argc, char ** argv)
             // arg = args;
             // *arg++ = strtok(buf,SEPARATORS);   // tokenise input
 
-            // while ((*arg++ = strtok(NULL,SEPARATORS)));
-            parse(buf, &args, &arg_count); // should parse input string
-
+            arg_count = parse(buf, &args); // should parse input string
+            printf("(This is after parse) Arg count: %d\n", arg_count);
+            for (int i = 0; i < arg_count; i++)
+            {
+                printf("elem: %s\n", args[i]);
+            }
+            
             /*
             * cd implementation.
             * cd can only be executed in the parent process, executing it
