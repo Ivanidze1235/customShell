@@ -39,43 +39,46 @@ int main (int argc, char ** argv)
     pid_t pid = getpid();
     extern char** environ;
 
-    int status;               
+    int status;                                 // stores process status
     char ** args;                               // pointers to arg strings
-    int arg_count;
-    char buf[1024];
+    int arg_count;                              // stores amount of arguments
+    char buf[1024];                             // initialise buffer storage with maximum input size
 
     char *path_buf;                             // path buffer
     long size;                                  // path size variable
     char *path;                                 // stores path
     char *prompt;                               // stores prompt (derivative of path)
-    size = pathconf(".", _PC_PATH_MAX);
-    prompt = malloc((size_t)size);
-    if ((path_buf = (char*)malloc((size_t)size)) != NULL) 
-    	path = getcwd(path_buf, (size_t)size); // get current path
-    strcpy(prompt, path);
-    strcat(prompt, ": ");
+    char *envr;                                 // environment storage. used to write shell path into environ variable
+
+    size = pathconf(".", _PC_PATH_MAX); // get maximum path length from the system
+    envr = malloc((size_t)size); // store environment
+    prompt = malloc((size_t)size); // store prompt
+    if ((path_buf = (char*)malloc((size_t)size)) != NULL){
+        path = getcwd(path_buf, (size_t)size); // get current path
+        strcpy(prompt, path); // copy path into prompt
+        strcat(prompt, ": "); // append a semicolon (or any other prompt form)
+    
+        /*following 3 lines create a new environment variable and put it into the environ*/
+
+        strcpy(envr, "shell="); // create the start of the line
+        strcat(envr, path); // concatenate the start and the path
+        putenv(envr); // put it in the variable list
+    }
+    
+    
     /* keep reading input until "quit" command or eof of redirected input */
     while (!feof(stdin)) { 
 	    /* get command line from input */
         fputs (prompt, stdout); // write prompt
         if (fgets (buf, 1024, stdin)) { // read a line
-            /* tokenize the input into args array */
-            // arg = args;
-            // *arg++ = strtok(buf,SEPARATORS);   // tokenise input
 
-            arg_count = parse(buf, &args); // should parse input string
-            printf("(This is after parse) Arg count: %d\n", arg_count);
-            for (int i = 0; i < arg_count; i++)
-            {
-                printf("elem: %s\n", args[i]);
-            }
+            arg_count = parse(buf, &args); // parse the input string into an array of strings (more details in parse.h)
             
             /*
             * cd implementation.
             * cd can only be executed in the parent process, executing it
             * in child process yields no result
             */
-
             if (!strcmp(args[0],"cd")){
                 if (args[1] == NULL){
                     ;
@@ -126,16 +129,8 @@ int main (int argc, char ** argv)
                         }
                         exit(0); // exits process after executing command(the program does something very bad without this exit)
                     default:
-                        waitpid(0, &status, WUNTRACED);	
+                        waitpid(0, &status, WUNTRACED);
                     }
-                
-
-                /* else pass command onto OS (or in this instance, print them out) */
-                //arg = args;
-                // while (*arg) {
-                //     fprintf(stdout,"%s ",*arg++);
-                //     fputs ("\n", stdout);
-                // }
             }
         }
     }
