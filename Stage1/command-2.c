@@ -106,14 +106,13 @@ int main (int argc, char ** argv)
                         }
                      
                         else if (!strcmp(args[0],"quit")) {   // "quit" command
-                            kill(pid, SIGQUIT);          // end process
+                            kill(pid, SIGQUIT);          // end parent process
                             exit(0);
                         }
 
                         
                         else if (!strcmp(args[0],"dir")){
-                            // execlp("ls", "ls", NULL, NULL);
-                            execvp(args[0], args);
+                            execvp("ls", args);
                         }
 
                         else if (!strcmp(args[0],"environ")){
@@ -133,6 +132,7 @@ int main (int argc, char ** argv)
                     }
             }
         }
+        cleanup(&args, arg_count);
     }
     return 0;
 }
