@@ -23,6 +23,19 @@ This code can be used for teaching purposes, but no warranty,
 explicit or implicit, is provided.
 *******************************************************************/
 
+/*
+    Shell by Ivan Fedorov
+    Reads a line from input, splits it into tokens, stores the separated string in an array,
+    checks if it is a known command, if it is, executes the command. 
+    Heavily inspired by strtokeg program by Ian G Graham
+    *******************************************************
+
+    Date: February 2025
+    Author: Ivan Fedorov
+    Dublin City University
+    ivan.fedorov2@mail.dcu.ie
+*/
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -79,19 +92,19 @@ int main (int argc, char ** argv)
             * cd can only be executed in the parent process, executing it
             * in child process yields no result
             */
-            if (!strcmp(args[0],"cd")){
+            if (!strcmp(args[0],"cd")){ // check if argument is cd
                 if (args[1] == NULL){
-                    ;
+                    ; // TODO: add reporting current directory
                 }
                 else{
-                    chdir(args[1]);
-                    path = getcwd(path_buf, (size_t)size);
-                    strcpy(prompt, path);
+                    chdir(args[1]); // changes current working directory
+                    path = getcwd(path_buf, (size_t)size); // gets new path
+                    strcpy(prompt, path); // set new prompt
                     strcat(prompt, ": ");
                 }
             }
             
-            else if (args[0]) {             // if there's anything there
+            else if (args[0]) {             // check if the first argument is not NULL
                                            
                 switch (fork()){            // fork to exec process
                     case -1:
@@ -135,8 +148,9 @@ int main (int argc, char ** argv)
                         waitpid(0, &status, WUNTRACED);
                     }
             }
+            cleanup(&args, arg_count);
         }
-        cleanup(&args, arg_count);
+        
     }
     return 0;
 }

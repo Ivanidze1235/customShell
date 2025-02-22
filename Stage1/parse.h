@@ -1,4 +1,5 @@
 #define MAX_ARGS 32 // maximum amount of arguments (potentially replace these static numbers with dynamic mem allocation)
+#include <stddef.h> // for some reason NULL is highlighted as undefined when this is missing, even though the program compiles and worksx
 
 int parse(char* unparsed, char*** args){ /*
     the function is passed an unparsed string and a triple char pointer.
@@ -15,7 +16,7 @@ int parse(char* unparsed, char*** args){ /*
     strcpy(*args[0], buf); // copy buffer to first element
     argc++; // increment counter
 
-    while(buf = strtok(NULL, " \t\n")){ // repeats the above process until there is no more string left
+    while((buf = strtok(NULL, " \t\n"))){ // repeats the above process until there is no more string left
         *(*args + argc) = calloc(strlen(buf) + 4, sizeof(char)); // allocate memory for next element
         strcpy(*(*args + argc), buf); // copy buffer to element
         argc++; // increment counter
