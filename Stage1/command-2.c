@@ -128,6 +128,10 @@ int main (int argc, char ** argv)
                             printf("\n"); // adds a newline in the end
                         }
 
+                        else if(!strcmp(args[0], "pause")){ // "pause" command
+                            printf("Press ENTER to continue...");
+                            getchar(); // waits for ENTER to be pressed
+                        }
                         
                         else if (!strcmp(args[0],"dir")){ // "dir" command
                             execvp("ls", args);           // executes ls with passed arguments
