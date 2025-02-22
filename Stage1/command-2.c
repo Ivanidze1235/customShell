@@ -1,28 +1,3 @@
-/* 
-
-strtokeg - skeleton shell using strtok to parse command line
-usage:
-strtokeg
-reads in a line of keyboard input at a time, parsing it into
-tokens that are separated by white spaces (set by #define SEPARATORS).
-can use redirected input if the first token is a recognised internal command, 
-then that command is executed. otherwise the tokens are printed on the display.
-
-internal commands:
-clear - clears the screen
-quit - exits from the program
-********************************************************************
-version: 1.0
-date:    December 2003
-author:  Ian G Graham
-School of Information Technology
-Griffith University, Gold Coast
-ian.graham@griffith.edu.au
-copyright (c) Ian G Graham, 2003. All rights reserved.
-This code can be used for teaching purposes, but no warranty,
-explicit or implicit, is provided.
-*******************************************************************/
-
 /*
     Shell by Ivan Fedorov
     Reads a line from input, splits it into tokens, stores the separated string in an array,
@@ -42,6 +17,7 @@ explicit or implicit, is provided.
 #include <unistd.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <stdbool.h>
 
 #include <./parse.h> // custom header file, contains a function that parses strings.
 
@@ -49,8 +25,8 @@ explicit or implicit, is provided.
 
 int main (int argc, char ** argv)
 {
-    pid_t pid = getpid();
-    extern char** environ;
+    pid_t pid = getpid();                       // gets and stores parent process PID
+    extern char** environ;                      // environment variables list
 
     int status;                                 // stores process status
     char ** args;                               // pointers to arg strings
@@ -62,6 +38,9 @@ int main (int argc, char ** argv)
     char *path;                                 // stores path
     char *prompt;                               // stores prompt (derivative of path)
     char *envr;                                 // environment storage. used to write shell path into environ variable
+
+    bool batchfile = 0;                         // boolean that checks whether a batchfile is used
+    FILE *fptr;                                 // pointer to store opened file (will probably rename to something more specific)
 
     size = pathconf(".", _PC_PATH_MAX); // get maximum path length from the system
     envr = malloc((size_t)size); // store environment
@@ -77,12 +56,23 @@ int main (int argc, char ** argv)
         strcat(envr, path); // concatenate the start and the path
         putenv(envr); // put it in the variable list
     }
-    
+
+    if (argv[1]){
+        if ((fptr = freopen(argv[1], "r", stdin)) == NULL){
+            printf("Could not open file!");
+        }
+        else{
+            batchfile = 1;
+        }
+    }
     
     /* keep reading input until "quit" command or eof of redirected input */
     while (!feof(stdin)) { 
 	    /* get command line from input */
-        fputs (prompt, stdout); // write prompt
+        if (!batchfile){ // check if batchfile is not used
+            fputs (prompt, stdout); // write prompt
+        }
+
         if (fgets (buf, 1024, stdin)) { // read a line
 
             arg_count = parse(buf, &args); // parse the input string into an array of strings (more details in parse.h)
@@ -149,13 +139,19 @@ int main (int argc, char ** argv)
                         }
                         exit(0); // exits process after executing command (the program does something very bad without this exit)
                     default:
+                    //TODO: implement background execution
                         waitpid(0, &status, WUNTRACED);
                     }
             }
-            cleanup(&args, arg_count);
+            cleanup(&args, arg_count); // call to a function in parse.h that frees up memory
         }
         
     }
+    if (argv[1])
+    {
+        fclose(fptr);
+    }
+    
     return 0;
 }
 
