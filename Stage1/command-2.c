@@ -101,32 +101,36 @@ int main (int argc, char ** argv)
                        /* put commands here */
 
                         if (!strcmp(args[0],"clr")) { // "clr" command
-                            system("clear");
-                            exit(0);
+                            system("clear");          // makes a system call to clear the screen.
                         }
                      
                         else if (!strcmp(args[0],"quit")) {   // "quit" command
                             kill(pid, SIGQUIT);          // end parent process
-                            exit(0);
+                        }
+
+                        else if (!strcmp(args[0], "echo")){ // "echo" command
+                            for(int i = 1; i < arg_count; i++){ // prints every stored argument
+                                printf("%s ", args[i]);
+                            }
+                            printf("\n"); // adds a newline in the end
                         }
 
                         
-                        else if (!strcmp(args[0],"dir")){
-                            execvp("ls", args);
+                        else if (!strcmp(args[0],"dir")){ // "dir" command
+                            execvp("ls", args);           // executes ls with passed arguments
                         }
 
-                        else if (!strcmp(args[0],"environ")){
+                        else if (!strcmp(args[0],"environ")){ // "environ" command, prints all environment variables
                             int i = 0;
-                            while(environ[i] != NULL){
+                            while(environ[i] != NULL){ // loop through all elements of environ
                                 printf("%s\n", environ[i]);
                                 i++;
                             }
                         }
-                        else{
+                        else{ // in case user uses an unknown command
                             printf("Unknown command\n");
-                            exit(0);
                         }
-                        exit(0); // exits process after executing command(the program does something very bad without this exit)
+                        exit(0); // exits process after executing command (the program does something very bad without this exit)
                     default:
                         waitpid(0, &status, WUNTRACED);
                     }
