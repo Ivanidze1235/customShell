@@ -38,12 +38,14 @@ int main (int argc, char ** argv)
     char *path;                                 // stores path
     char *prompt;                               // stores prompt (derivative of path)
     char *envr;                                 // environment storage. used to write shell path into environ variable
+    char *help_path;                            // path to helpfile
 
     bool batchfile = 0;                         // boolean that checks whether a batchfile is used
     FILE *fptr;                                 // pointer to store opened file (will probably rename to something more specific)
 
     size = pathconf(".", _PC_PATH_MAX);         // get maximum path length from the system
     envr = malloc((size_t)size);                // store environment
+    help_path = malloc((size_t)size);                // store helpfile directory
     prompt = malloc((size_t)size);              // store prompt
     if ((path_buf = (char*)malloc((size_t)size)) != NULL){
         path = getcwd(path_buf, (size_t)size);  // get current path
@@ -55,6 +57,9 @@ int main (int argc, char ** argv)
         strcpy(envr, "shell=");                 // create the start of the line
         strcat(envr, path);                     // concatenate the start and the path
         putenv(envr);                           // put it in the variable list
+
+        strcpy(help_path, path);                 // copy path to help_path
+        strcat(help_path, "/help.txt");          // add filename
     }
 
     if (argv[1]){
@@ -87,7 +92,8 @@ int main (int argc, char ** argv)
             */
             if (!strcmp(args[0],"cd")){         // check if argument is cd
                 if (args[1] == NULL){
-                    ; // TODO: add reporting current directory
+                    printf(path);
+                    printf("\n");
                 }
                 else{
                     chdir(args[1]);                                 // changes current working directory
@@ -139,7 +145,8 @@ int main (int argc, char ** argv)
                         }
 
                         else if (!strcmp(args[0],"help")){                      // "help" command
-                            FILE *helpfile = fopen("help.txt", "r");            // opens the file containing helpful info
+                            
+                            FILE *helpfile = fopen(help_path, "r");             // opens the file containing helpful info
                             if (helpfile == NULL)                               // check if the file was opened successfully
                             {
                                 printf("Couldn't open help file.\n");           // report error otherwise
