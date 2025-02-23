@@ -42,19 +42,19 @@ int main (int argc, char ** argv)
     bool batchfile = 0;                         // boolean that checks whether a batchfile is used
     FILE *fptr;                                 // pointer to store opened file (will probably rename to something more specific)
 
-    size = pathconf(".", _PC_PATH_MAX); // get maximum path length from the system
-    envr = malloc((size_t)size); // store environment
-    prompt = malloc((size_t)size); // store prompt
+    size = pathconf(".", _PC_PATH_MAX);         // get maximum path length from the system
+    envr = malloc((size_t)size);                // store environment
+    prompt = malloc((size_t)size);              // store prompt
     if ((path_buf = (char*)malloc((size_t)size)) != NULL){
-        path = getcwd(path_buf, (size_t)size); // get current path
-        strcpy(prompt, path); // copy path into prompt
-        strcat(prompt, ": "); // append a semicolon (or any other prompt form)
+        path = getcwd(path_buf, (size_t)size);  // get current path
+        strcpy(prompt, path);                   // copy path into prompt
+        strcat(prompt, ": ");                   // append a semicolon (or any other prompt form)
     
         /*following 3 lines create a new environment variable and put it into the environ*/
 
-        strcpy(envr, "shell="); // create the start of the line
-        strcat(envr, path); // concatenate the start and the path
-        putenv(envr); // put it in the variable list
+        strcpy(envr, "shell=");                 // create the start of the line
+        strcat(envr, path);                     // concatenate the start and the path
+        putenv(envr);                           // put it in the variable list
     }
 
     if (argv[1]){
@@ -66,92 +66,114 @@ int main (int argc, char ** argv)
         }
     }
     
-    /* keep reading input until "quit" command or eof of redirected input */
-    while (!feof(stdin)) { 
-	    /* get command line from input */
-        if (!batchfile){ // check if batchfile is not used
-            fputs (prompt, stdout); // write prompt
+    while (!feof(stdin)) {
+        /*
+        This is the main loop, where we print the prompt (if not in batchfile mode),
+        read input, parse it using a function, then check if it matches one of the internal
+        commands, and executing the command.
+        */
+        if (!batchfile){                        // check if batchfile is not used
+            fputs (prompt, stdout);             // write prompt
         }
 
-        if (fgets (buf, 1024, stdin)) { // read a line
+        if (fgets (buf, 1024, stdin)) {         // read a line
 
-            arg_count = parse(buf, &args); // parse the input string into an array of strings (more details in parse.h)
+            arg_count = parse(buf, &args);      // parse the input string into an array of strings (more details in parse.h)
             
             /*
             * cd implementation.
             * cd can only be executed in the parent process, executing it
             * in child process yields no result
             */
-            if (!strcmp(args[0],"cd")){ // check if argument is cd
+            if (!strcmp(args[0],"cd")){         // check if argument is cd
                 if (args[1] == NULL){
                     ; // TODO: add reporting current directory
                 }
                 else{
-                    chdir(args[1]); // changes current working directory
-                    path = getcwd(path_buf, (size_t)size); // gets new path
-                    strcpy(prompt, path); // set new prompt
+                    chdir(args[1]);                                 // changes current working directory
+                    path = getcwd(path_buf, (size_t)size);          // gets new path
+                    strcpy(prompt, path);                           // set new prompt
                     strcat(prompt, ": ");
                 }
             }
             
-            else if (args[0]) {             // check if the first argument is not NULL
+            else if (args[0]) {                 // check if the first argument is not NULL
                                            
-                switch (fork()){            // fork to exec process
+                switch (fork()){                // fork to exec process
                     case -1:
                         printf("Fork didn't succeed.");
                         break;
                     case 0:
                        /* put commands here */
 
-                        if (!strcmp(args[0],"clr")) { // "clr" command
-                            system("clear");          // makes a system call to clear the screen.
+                        if (!strcmp(args[0],"clr")) {               // "clr" command
+                            system("clear");                        // makes a system call to clear the screen.
                         }
                      
-                        else if (!strcmp(args[0],"quit")) {   // "quit" command
-                            kill(pid, SIGQUIT);          // end parent process
+                        else if (!strcmp(args[0],"quit")) {         // "quit" command
+                            kill(pid, SIGQUIT);                     // end parent process
                         }
 
-                        else if (!strcmp(args[0], "echo")){ // "echo" command
-                            for(int i = 1; i < arg_count; i++){ // prints every stored argument
+                        else if (!strcmp(args[0], "echo")){         // "echo" command
+                            for(int i = 1; i < arg_count; i++){     // prints every stored argument
                                 printf("%s ", args[i]);
                             }
-                            printf("\n"); // adds a newline in the end
+                            printf("\n");                           // adds a newline in the end
                         }
 
-                        else if(!strcmp(args[0], "pause")){ // "pause" command
+                        else if(!strcmp(args[0], "pause")){         // "pause" command
                             printf("Press ENTER to continue...");
-                            getchar(); // waits for ENTER to be pressed
+                            getchar();                              // waits for ENTER to be pressed
                         }
                         
-                        else if (!strcmp(args[0],"dir")){ // "dir" command
-                            execvp("ls", args);           // executes ls with passed arguments
+                        else if (!strcmp(args[0],"dir")){           // "dir" command
+                            execvp("ls", args);                     // executes ls with passed arguments
                         }
 
-                        else if (!strcmp(args[0],"environ")){ // "environ" command, prints all environment variables
+                        else if (!strcmp(args[0],"environ")){       // "environ" command, prints all environment variables
                             int i = 0;
-                            while(environ[i] != NULL){ // loop through all elements of environ
+                            while(environ[i] != NULL){              // loop through all elements of environ
                                 printf("%s\n", environ[i]);
                                 i++;
                             }
                         }
-                        else{ // in case user uses an unknown command
+
+                        else if (!strcmp(args[0],"help")){                      // "help" command
+                            FILE *helpfile = fopen("help.txt", "r");            // opens the file containing helpful info
+                            if (helpfile == NULL)                               // check if the file was opened successfully
+                            {
+                                printf("Couldn't open help file.\n");           // report error otherwise
+                            }
+                            else
+                            {
+                                char temp[1024];                                // create temp storage for strings
+                                while (fgets(temp, 1024, helpfile) != NULL) {   // loop through lines in file
+                                    printf("%s", temp);                         // print line
+                                }
+                                printf("\n");
+                                fclose(helpfile);                               // close file after reading it
+                            }
+                            
+                        }
+
+                        else{                   // in case user uses an unknown command
                             printf("Unknown command\n");
                         }
-                        exit(0); // exits process after executing command (the program does something very bad without this exit)
+                        exit(0);                // exits process after executing command (the program does something very bad without this exit)
                     default:
                     //TODO: implement background execution
                         waitpid(0, &status, WUNTRACED);
                     }
             }
-            cleanup(&args, arg_count); // call to a function in parse.h that frees up memory
+            cleanup(&args, arg_count);          // call to a function in parse.h that frees up memory
         }
         
     }
-    if (argv[1])
+    if (batchfile)                              // check if batchfile present
     {
-        fclose(fptr);
+        fclose(fptr);                           // close stream
     }
     
-    return 0;
+    return 0;                                   // end of program
 }
 
