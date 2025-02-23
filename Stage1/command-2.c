@@ -54,7 +54,7 @@ int main (int argc, char ** argv)
     
         /*following 3 lines create a new environment variable and put it into the environ*/
 
-        strcpy(envr, "shell=");                 // create the start of the line
+        strcpy(envr, "SHELL=");                 // create the start of the line
         strcat(envr, path);                     // concatenate the start and the path
         putenv(envr);                           // put it in the variable list
 
