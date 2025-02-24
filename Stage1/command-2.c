@@ -180,12 +180,12 @@ int main (int argc, char ** argv)
                     default:
                         break;
                 }
-                    if (!bg_exec)
+                    if (!bg_exec)                       // check if background execution flag is down
                     {
-                        waitpid(0, &status, WUNTRACED);
+                        waitpid(0, &status, WUNTRACED); // if it is down, wait for execution
                     }
                     else{
-                        continue;
+                        continue;                       // else, do not wait
                     }
             }
             cleanup(&args, arg_count);          // call to a function in parse.h that frees up memory

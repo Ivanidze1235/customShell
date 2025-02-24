@@ -1,4 +1,4 @@
-#define MAX_ARGS 32             // maximum amount of arguments (potentially replace these static numbers with dynamic mem allocation)
+#define MAX_ARGS 32                             // maximum amount of arguments
 
 int parse(char* unparsed, char*** args){ 
     /*
