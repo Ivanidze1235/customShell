@@ -40,6 +40,7 @@ int main (int argc, char ** argv)
     char *envr;                                 // environment storage. used to write shell path into environ variable
     char *help_path;                            // path to helpfile
 
+    bool bg_exec = 0;
     bool batchfile = 0;                         // boolean that checks whether a batchfile is used
     FILE *fptr;                                 // pointer to store opened file (will probably rename to something more specific)
 
@@ -77,29 +78,38 @@ int main (int argc, char ** argv)
         read input, parse it using a function, then check if it matches one of the internal
         commands, and executing the command.
         */
-        if (!batchfile){                        // check if batchfile is not used
-            fputs (prompt, stdout);             // write prompt
+        if (!batchfile){                                    // check if batchfile is not used
+            fputs (prompt, stdout);                         // write prompt
         }
-
-        if (fgets (buf, 1024, stdin)) {         // read a line
-
-            arg_count = parse(buf, &args);      // parse the input string into an array of strings (more details in parse.h)
+        
+        if (fgets (buf, 1024, stdin)) {                     // read a line
+            if (buf[0] != 10){                              // check if input is newline
+                arg_count = parse(buf, &args);              // parse the input string into an array of strings (more details in parse.h)
+            }
+            else{
+                continue;                                   // skip to next input
+            }
             
+            bg_exec = !strcmp(args[arg_count - 1], "&");    // set background execution to true or false
             /*
             * cd implementation.
             * cd can only be executed in the parent process, executing it
             * in child process yields no result
             */
-            if (!strcmp(args[0],"cd")){         // check if argument is cd
+            if (!strcmp(args[0],"cd")){                     // check if argument is cd
                 if (args[1] == NULL){
                     printf(path);
                     printf("\n");
                 }
                 else{
-                    chdir(args[1]);                                 // changes current working directory
-                    path = getcwd(path_buf, (size_t)size);          // gets new path
-                    strcpy(prompt, path);                           // set new prompt
-                    strcat(prompt, ": ");
+                    if(!chdir(args[1])){                                // tries to change current working directory
+                        path = getcwd(path_buf, (size_t)size);          // gets new path
+                        strcpy(prompt, path);                           // set new prompt
+                        strcat(prompt, ": ");
+                    }
+                    else{
+                        printf("directory does not exist.\n");
+                    }
                 }
             }
             
@@ -163,13 +173,19 @@ int main (int argc, char ** argv)
                             
                         }
 
-                        else{                   // in case user uses an unknown command
-                            printf("Unknown command\n");
+                        else{                           // in case user uses an external command
+                            execvp(args[0], args);      // execute external command
                         }
-                        exit(0);                // exits process after executing command (the program does something very bad without this exit)
+                        exit(0);                        // exits process after executing command (the program does something very bad without this exit)
                     default:
-                    //TODO: implement background execution
+                        break;
+                }
+                    if (!bg_exec)
+                    {
                         waitpid(0, &status, WUNTRACED);
+                    }
+                    else{
+                        continue;
                     }
             }
             cleanup(&args, arg_count);          // call to a function in parse.h that frees up memory
