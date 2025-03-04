@@ -1,0 +1,3 @@
+# ignore temporary files and executables
+input.txt
+bin/customshell

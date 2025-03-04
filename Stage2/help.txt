@@ -1,0 +1,8 @@
+list of commands:
+clr - clears the screen
+quit - exits the program
+echo - outputs provided arguments
+pause - halts execution of the program until ENTER is pressed
+dir - lists the contents of the current directory, or another directory if path specified
+environ - lists environment variables
+help - outputs this information
