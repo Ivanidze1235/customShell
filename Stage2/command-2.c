@@ -2,7 +2,7 @@
     Shell by Ivan Fedorov
     Reads a line from input, splits it into tokens, stores the separated string in an array,
     checks if it is a known command, if it is, executes the command. 
-    Heavily inspired by strtokeg program by Ian G Graham
+    Heavily inspired by 'strtokeg' program by Ian G Graham
     *******************************************************
 
     Date: February 2025
@@ -25,7 +25,7 @@
 
 int main (int argc, char ** argv)
 {
-    pid_t pid = getpid();                       // gets and stores parent process PID
+    //pid_t pid = getpid();                       // gets and stores parent process PID
     extern char** environ;                      // environment variables list
 
     int status;                                 // stores process status
@@ -91,14 +91,10 @@ int main (int argc, char ** argv)
             }
             
             bg_exec = !strcmp(args[arg_count - 1], "&");    // set background execution to true or false
-            /*
-            * cd implementation.
-            * cd can only be executed in the parent process, executing it
-            * in child process yields no result
-            */
+
             if (!strcmp(args[0],"cd")){                     // check if argument is cd
-                if (args[1] == NULL){
-                    printf("%s", path);
+                if (args[1] == NULL){                       // check whether there is no parameter
+                    printf("%s", path);                     // pront out current path
                     printf("\n");
                 }
                 else{
@@ -112,7 +108,59 @@ int main (int argc, char ** argv)
                     }
                 }
             }
+
+            else if (!strcmp(args[0],"clr")) {          // "clr" command
+                system("clear");                        // makes a system call to clear the screen.
+            }
+         
+            else if (!strcmp(args[0],"quit")) {         // "quit" command
+                return 0;
+            }
+
+            else if (!strcmp(args[0], "echo")){         // "echo" command
+                for(int i = 1; i < arg_count; i++){     // prints every stored argument
+                    printf("%s ", args[i]);
+                }
+                printf("\n");                           // adds a newline in the end
+            }
+
+            else if(!strcmp(args[0], "pause")){         // "pause" command
+                printf("Press ENTER to continue...");
+                getchar();                              // waits for ENTER to be pressed
+            }
             
+            else if (!strcmp(args[0],"dir")){           // "dir" command
+                system("ls");                           // executes ls with passed arguments
+                //TODO: add parameter support
+            }
+
+            else if (!strcmp(args[0],"environ")){       // "environ" command, prints all environment variables
+                int i = 0;
+                while(environ[i] != NULL){              // loop through all elements of environ
+                    printf("%s\n", environ[i]);
+                    i++;
+                }
+            }
+
+            else if (!strcmp(args[0],"help")){                      // "help" command
+                
+                FILE *helpfile = fopen(help_path, "r");             // opens the file containing helpful info
+                if (helpfile == NULL)                               // check if the file was opened successfully
+                {
+                    printf("Couldn't open help file.\n");           // report error otherwise
+                }
+                else
+                {
+                    char temp[1024];                                // create temp storage for strings
+                    while (fgets(temp, 1024, helpfile) != NULL) {   // loop through lines in file
+                        printf("%s", temp);                         // print line
+                    }
+                    printf("\n");
+                    fclose(helpfile);                               // close file after reading it
+                }
+                
+            }
+
             else if (args[0]) {                 // check if the first argument is not NULL
                                            
                 switch (fork()){                // fork to exec process
@@ -120,63 +168,9 @@ int main (int argc, char ** argv)
                         printf("Fork didn't succeed.");
                         break;
                     case 0:
-                       /* put commands here */
-
-                        if (!strcmp(args[0],"clr")) {               // "clr" command
-                            system("clear");                        // makes a system call to clear the screen.
-                        }
-                     
-                        else if (!strcmp(args[0],"quit")) {         // "quit" command
-                            kill(pid, SIGQUIT);                     // end parent process
-                        }
-
-                        else if (!strcmp(args[0], "echo")){         // "echo" command
-                            for(int i = 1; i < arg_count; i++){     // prints every stored argument
-                                printf("%s ", args[i]);
-                            }
-                            printf("\n");                           // adds a newline in the end
-                        }
-
-                        else if(!strcmp(args[0], "pause")){         // "pause" command
-                            printf("Press ENTER to continue...");
-                            getchar();                              // waits for ENTER to be pressed
-                        }
-                        
-                        else if (!strcmp(args[0],"dir")){           // "dir" command
-                            execvp("ls", args);                     // executes ls with passed arguments
-                        }
-
-                        else if (!strcmp(args[0],"environ")){       // "environ" command, prints all environment variables
-                            int i = 0;
-                            while(environ[i] != NULL){              // loop through all elements of environ
-                                printf("%s\n", environ[i]);
-                                i++;
-                            }
-                        }
-
-                        else if (!strcmp(args[0],"help")){                      // "help" command
-                            
-                            FILE *helpfile = fopen(help_path, "r");             // opens the file containing helpful info
-                            if (helpfile == NULL)                               // check if the file was opened successfully
-                            {
-                                printf("Couldn't open help file.\n");           // report error otherwise
-                            }
-                            else
-                            {
-                                char temp[1024];                                // create temp storage for strings
-                                while (fgets(temp, 1024, helpfile) != NULL) {   // loop through lines in file
-                                    printf("%s", temp);                         // print line
-                                }
-                                printf("\n");
-                                fclose(helpfile);                               // close file after reading it
-                            }
-                            
-                        }
-
-                        else{                           // in case user uses an external command
-                            execvp(args[0], args);      // execute external command
-                        }
-                        exit(0);                        // exits process after executing command (the program does something very bad without this exit)
+                        execv(args[0], args);           // execute command (does not work currently)
+                        printf("Command did not execute\n");
+                        exit(0);                        // exit in case command didn't execute
                     default:
                         break;
                 }
