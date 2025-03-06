@@ -25,7 +25,7 @@
 
 int main (int argc, char ** argv)
 {
-    //pid_t pid = getpid();                       // gets and stores parent process PID
+    //pid_t pid = getpid();                     // gets and stores parent process PID
     extern char** environ;                      // environment variables list
 
     int status;                                 // stores process status
@@ -33,8 +33,8 @@ int main (int argc, char ** argv)
     int arg_count;                              // stores amount of arguments
     char buf[1024];                             // initialise buffer storage with maximum input size
 
-    char *path_buf;                             // path buffer
-    long size;                                  // path size variable
+    char *path_buf;                             // path buffer (used for getcwd)
+    long path_size;                             // path size variable
     char *path;                                 // stores path
     char *prompt;                               // stores prompt (derivative of path)
     char *envr;                                 // environment storage. used to write shell path into environ variable
@@ -44,12 +44,12 @@ int main (int argc, char ** argv)
     bool batchfile = 0;                         // boolean that checks whether a batchfile is used
     FILE *fptr;                                 // pointer to store opened file (will probably rename to something more specific)
 
-    size = pathconf(".", _PC_PATH_MAX);         // get maximum path length from the system
-    envr = malloc((size_t)size);                // store environment
-    help_path = malloc((size_t)size);                // store helpfile directory
-    prompt = malloc((size_t)size);              // store prompt
-    if ((path_buf = (char*)malloc((size_t)size)) != NULL){
-        path = getcwd(path_buf, (size_t)size);  // get current path
+    path_size = pathconf(".", _PC_PATH_MAX);         // get maximum path length from the system
+    envr = malloc((size_t)path_size);                // store environment
+    help_path = malloc((size_t)path_size);                // store helpfile directory
+    prompt = malloc((size_t)path_size);              // store prompt
+    if ((path_buf = (char*)malloc((size_t)path_size)) != NULL){
+        path = getcwd(path_buf, (size_t)path_size);  // get current path
         strcpy(prompt, path);                   // copy path into prompt
         strcat(prompt, ": ");                   // append a semicolon (or any other prompt form)
     
@@ -63,12 +63,12 @@ int main (int argc, char ** argv)
         strcat(help_path, "/help.txt");          // add filename
     }
 
-    if (argv[1]){
-        if ((fptr = freopen(argv[1], "r", stdin)) == NULL){
-            printf("Could not open file!");
+    if (argv[1]){                                               // check if there is a batchfile being input
+        if ((fptr = freopen(argv[1], "r", stdin)) == NULL){     // switch input stream to file
+            printf("Could not open file!");                     // notify if not succeeded
         }
         else{
-            batchfile = 1;
+            batchfile = 1;                                      // set batchfile switch to true
         }
     }
     
@@ -83,14 +83,19 @@ int main (int argc, char ** argv)
         }
         
         if (fgets (buf, 1024, stdin)) {                     // read a line
-            if (buf[0] != 10){                              // check if input is newline
+            if (buf[0] != 10){                              // check if input is newline, if not, parse
                 arg_count = parse(buf, &args);              // parse the input string into an array of strings (more details in parse.h)
             }
             else{
-                continue;                                   // skip to next input
+                continue;                                   // skip to next input if input is newline
             }
             
             bg_exec = !strcmp(args[arg_count - 1], "&");    // set background execution to true or false
+            if (bg_exec)
+            {
+                args[arg_count - 1] = NULL;                 // set background execution symbol to NULL so it is not read by commands
+            }
+            
 
             if (!strcmp(args[0],"cd")){                     // check if argument is cd
                 if (args[1] == NULL){                       // check whether there is no parameter
@@ -99,12 +104,12 @@ int main (int argc, char ** argv)
                 }
                 else{
                     if(!chdir(args[1])){                                // tries to change current working directory
-                        path = getcwd(path_buf, (size_t)size);          // gets new path
+                        path = getcwd(path_buf, (size_t)path_size);          // gets new path
                         strcpy(prompt, path);                           // set new prompt
                         strcat(prompt, ": ");
                     }
                     else{
-                        printf("directory does not exist.\n");
+                        printf("directory does not exist.\n");          // notify if directory does not exist / cannot find it
                     }
                 }
             }
@@ -130,7 +135,7 @@ int main (int argc, char ** argv)
             }
             
             else if (!strcmp(args[0],"dir")){           // "dir" command
-                system("ls");                           // executes ls with passed arguments
+                system("ls -al");                           // executes ls with passed arguments
                 //TODO: add parameter support
             }
 
@@ -164,11 +169,11 @@ int main (int argc, char ** argv)
             else if (args[0]) {                 // check if the first argument is not NULL
                                            
                 switch (fork()){                // fork to exec process
-                    case -1:
+                    case -1:                    // check for error
                         printf("Fork didn't succeed.");
                         break;
                     case 0:
-                        execv(args[0], args);           // execute command (does not work currently)
+                        execvp(args[0], args);          // execute command (does not work currently)
                         printf("Command did not execute\n");
                         exit(0);                        // exit in case command didn't execute
                     default:
