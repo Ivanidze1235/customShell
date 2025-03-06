@@ -33,7 +33,6 @@ int main (int argc, char ** argv)
     int arg_count;                              // stores amount of arguments
     char buf[1024];                             // initialise buffer storage with maximum input size
 
-    char *path_buf;                             // path buffer (used for getcwd)
     long path_size;                             // path size variable
     char *path;                                 // stores path
     char *prompt;                               // stores prompt (derivative of path)
@@ -46,10 +45,10 @@ int main (int argc, char ** argv)
 
     path_size = pathconf(".", _PC_PATH_MAX);         // get maximum path length from the system
     envr = malloc((size_t)path_size);                // store environment
-    help_path = malloc((size_t)path_size);                // store helpfile directory
+    help_path = malloc((size_t)path_size);           // store helpfile directory
     prompt = malloc((size_t)path_size);              // store prompt
-    if ((path_buf = (char*)malloc((size_t)path_size)) != NULL){
-        path = getcwd(path_buf, (size_t)path_size);  // get current path
+    if ((path = (char*)malloc((size_t)path_size)) != NULL){
+        path = getcwd(path, (size_t)path_size);  // get current path
         strcpy(prompt, path);                   // copy path into prompt
         strcat(prompt, ": ");                   // append a semicolon (or any other prompt form)
     
@@ -104,7 +103,7 @@ int main (int argc, char ** argv)
                 }
                 else{
                     if(!chdir(args[1])){                                // tries to change current working directory
-                        path = getcwd(path_buf, (size_t)path_size);          // gets new path
+                        path = getcwd(path, (size_t)path_size);         // gets new path
                         strcpy(prompt, path);                           // set new prompt
                         strcat(prompt, ": ");
                     }
