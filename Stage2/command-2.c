@@ -19,9 +19,8 @@
 #include <signal.h>
 #include <stdbool.h>
 
-#include <./parse.h> // custom header file, contains a function that parses strings.
-
-#define SEPARATORS " \t\n"                     // token separators
+#include "parse.h"    // custom file, contains a function that parses strings.
+#include "getpath.h"  // another custom file, contains a function that gets bin path
 
 int main (int argc, char ** argv)
 {
@@ -34,7 +33,9 @@ int main (int argc, char ** argv)
     char buf[1024];                             // initialise buffer storage with maximum input size
 
     long path_size;                             // path size variable
-    char *path;                                 // stores path
+    char *path;                                 // temporary storage for the path
+    
+    char *path_bin;                             // stores path
     char *prompt;                               // stores prompt (derivative of path)
     char *envr;                                 // environment storage. used to write shell path into environ variable
     char *help_path;                            // path to helpfile
@@ -47,19 +48,33 @@ int main (int argc, char ** argv)
     envr = malloc((size_t)path_size);                // store environment
     help_path = malloc((size_t)path_size);           // store helpfile directory
     prompt = malloc((size_t)path_size);              // store prompt
-    if ((path = (char*)malloc((size_t)path_size)) != NULL){
+    if ((path_bin = (char*)malloc((size_t)path_size)) != NULL){
+        path = (char*)malloc((size_t)path_size);
         path = getcwd(path, (size_t)path_size);  // get current path
-        strcpy(prompt, path);                   // copy path into prompt
-        strcat(prompt, ": ");                   // append a semicolon (or any other prompt form)
-    
-        /*following 3 lines create a new environment variable and put it into the environ*/
+        
+        getpath(&argv[0], path_size, &path_bin); // function that gets the
 
         strcpy(envr, "SHELL=");                 // create the start of the line
-        strcat(envr, path);                     // concatenate the start and the path
+        strcat(envr, path_bin);                     // concatenate the start and the path
         putenv(envr);                           // put it in the variable list
 
-        strcpy(help_path, path);                 // copy path to help_path
-        strcat(help_path, "/help.txt");          // add filename
+        strcpy(help_path, "more ");             // add "more" command to help path
+        chdir(path_bin);
+        chdir("..");
+        char *path_temp;                        // temporary storage for the path
+        path_temp = malloc((size_t)path_size);
+        path_temp = getcwd(path_temp, (size_t)path_size);
+        strcat(help_path, path_temp);
+        free(path_temp);
+        chdir(path);
+        strcat(help_path, "/manual/help.txt");   // add filename
+
+        if(chdir(path)){                        // attempt to go back to current directory
+            printf("couldn't go back\n");
+        }
+
+        strcpy(prompt, path);                   // copy path into prompt
+        strcat(prompt, ": ");                   // append a semicolon (or any other prompt form)
     }
 
     if (argv[1]){                                               // check if there is a batchfile being input
@@ -83,7 +98,7 @@ int main (int argc, char ** argv)
         
         if (fgets (buf, 1024, stdin)) {                     // read a line
             if (buf[0] != 10){                              // check if input is newline, if not, parse
-                arg_count = parse(buf, &args);              // parse the input string into an array of strings (more details in parse.h)
+                arg_count = parse(buf, &args, " \t\n");              // parse the input string into an array of strings (more details in parse.h)
             }
             else{
                 continue;                                   // skip to next input if input is newline
@@ -146,23 +161,10 @@ int main (int argc, char ** argv)
                 }
             }
 
-            else if (!strcmp(args[0],"help")){                      // "help" command
-                
-                FILE *helpfile = fopen(help_path, "r");             // opens the file containing helpful info
-                if (helpfile == NULL)                               // check if the file was opened successfully
-                {
-                    printf("Couldn't open help file.\n");           // report error otherwise
+            else if (!strcmp(args[0],"help")){          // "help" command
+                if(system(help_path)){                  // system call the help method        
+                    printf("Could not read help file.\n");  // notify in case it did not succeed
                 }
-                else
-                {
-                    char temp[1024];                                // create temp storage for strings
-                    while (fgets(temp, 1024, helpfile) != NULL) {   // loop through lines in file
-                        printf("%s", temp);                         // print line
-                    }
-                    printf("\n");
-                    fclose(helpfile);                               // close file after reading it
-                }
-                
             }
 
             else if (args[0]) {                 // check if the first argument is not NULL
