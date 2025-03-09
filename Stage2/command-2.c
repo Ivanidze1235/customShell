@@ -54,10 +54,15 @@ int main (int argc, char ** argv)
         
         getpath(&argv[0], path_size, &path_bin); // function that gets the
 
-        strcpy(envr, "SHELL=");                 // create the start of the line
+        strcpy(envr, "SHELL=");                     // create the start of the line
         strcat(envr, path_bin);                     // concatenate the start and the path
-        putenv(envr);                           // put it in the variable list
+        strcat(envr, "/customshell");               // add file name
+        putenv(envr);                               // put it in the variable list
+        free(envr);                                 // free the variable as it is not needed anymore
 
+        /*
+        The following piece of code is an elaborate way to store help file path
+        */
         strcpy(help_path, "more ");             // add "more" command to help path
         chdir(path_bin);
         chdir("..");
@@ -98,7 +103,7 @@ int main (int argc, char ** argv)
         
         if (fgets (buf, 1024, stdin)) {                     // read a line
             if (buf[0] != 10){                              // check if input is newline, if not, parse
-                arg_count = parse(buf, &args, " \t\n");              // parse the input string into an array of strings (more details in parse.h)
+                arg_count = parse(buf, &args, " \t\n");     // parse the input string into an array of strings (more details in parse.h)
             }
             else{
                 continue;                                   // skip to next input if input is newline
@@ -146,6 +151,7 @@ int main (int argc, char ** argv)
             else if(!strcmp(args[0], "pause")){         // "pause" command
                 printf("Press ENTER to continue...");
                 getchar();                              // waits for ENTER to be pressed
+                continue;
             }
             
             else if (!strcmp(args[0],"dir")){           // "dir" command
@@ -167,13 +173,19 @@ int main (int argc, char ** argv)
                 }
             }
 
-            else if (args[0]) {                 // check if the first argument is not NULL
+            else if (args[0]) {                 // External command execution
                                            
                 switch (fork()){                // fork to exec process
                     case -1:                    // check for error
                         printf("Fork didn't succeed.");
                         break;
                     case 0:
+                        char* parent_env = malloc((size_t)path_size);
+                        strcpy(parent_env, "PARENT=");
+                        strcat(parent_env, path_bin);
+                        strcat(parent_env, "/customshell");
+                        putenv(parent_env);
+                        free(parent_env);
                         execvp(args[0], args);          // execute command (does not work currently)
                         printf("Command did not execute\n");
                         exit(0);                        // exit in case command didn't execute
