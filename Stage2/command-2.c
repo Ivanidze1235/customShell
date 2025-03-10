@@ -54,10 +54,10 @@ int main (int argc, char ** argv)
         
         getpath(&argv[0], path_size, &path_bin); // function that gets the
 
-        strcpy(envr, "SHELL=");                     // create the start of the line
+        strcpy(envr, "");                     // create the start of the line
         strcat(envr, path_bin);                     // concatenate the start and the path
         strcat(envr, "/customshell");               // add file name
-        putenv(envr);                               // put it in the variable list
+        setenv("SHELL", envr, 1);                   // put it in the variable list
         free(envr);                                 // free the variable as it is not needed anymore
 
         /*
@@ -180,15 +180,22 @@ int main (int argc, char ** argv)
                         printf("Fork didn't succeed.");
                         break;
                     case 0:
-                        char* parent_env = malloc((size_t)path_size);
-                        strcpy(parent_env, "PARENT=");
+                        char* parent_env = malloc((size_t)path_size);   // create temporary storage for environment variable
+                        strcpy(parent_env, "");
                         strcat(parent_env, path_bin);
-                        strcat(parent_env, "/customshell");
-                        putenv(parent_env);
-                        free(parent_env);
-                        execvp(args[0], args);          // execute command (does not work currently)
+                        strcat(parent_env, "/customshell");             // append executable name
+                        setenv("PARENT", parent_env ,1);                // put line into environment
+                        free(parent_env);                               // free temporary variable
+                        
+                        if (bg_exec)
+                        {
+                            printf("\n");
+                        }
+                        
+
+                        execvp(args[0], args);                          // execute command (does not work currently)
                         printf("Command did not execute\n");
-                        exit(0);                        // exit in case command didn't execute
+                        exit(0);                                        // exit in case command didn't execute
                     default:
                         break;
                 }
