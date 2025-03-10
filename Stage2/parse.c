@@ -1,12 +1,6 @@
 #define MAX_ARGS 32                             // maximum amount of arguments
 
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <signal.h>
-#include <stdbool.h>
+#include "parse.h"
 
 int parse(char* unparsed, char*** args, char* separators){ 
     /*

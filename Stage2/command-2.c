@@ -11,14 +11,6 @@
     ivan.fedorov2@mail.dcu.ie
 */
 
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <signal.h>
-#include <stdbool.h>
-
 #include "parse.h"    // custom file, contains a function that parses strings.
 #include "getpath.h"  // another custom file, contains a function that gets bin path
 

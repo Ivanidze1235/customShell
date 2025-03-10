@@ -1,11 +1,3 @@
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <signal.h>
-#include <stdbool.h>
-
 #include "parse.h"
 
 void getpath(char** argv, size_t path_size, char** path_bin){
