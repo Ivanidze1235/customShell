@@ -34,7 +34,9 @@ int main (int argc, char ** argv)
 
     bool bg_exec = 0;
     bool batchfile = 0;                         // boolean that checks whether a batchfile is used
-    FILE *fptr;                                 // pointer to store opened file (will probably rename to something more specific)
+    FILE *batchfile_ptr;                        // pointer to store opened file (will probably rename to something more specific)
+    FILE *output_ptr;                           // pointer to output file
+    int output_temp = dup(fileno(stdout));
 
     path_size = pathconf(".", _PC_PATH_MAX);         // get maximum path length from the system
     envr = malloc((size_t)path_size);                // store environment
@@ -75,7 +77,7 @@ int main (int argc, char ** argv)
     }
 
     if (argv[1]){                                               // check if there is a batchfile being input
-        if ((fptr = freopen(argv[1], "r", stdin)) == NULL){     // switch input stream to file
+        if ((batchfile_ptr = freopen(argv[1], "r", stdin)) == NULL){     // switch input stream to file
             printf("Could not open file!");                     // notify if not succeeded
         }
         else{
@@ -100,6 +102,16 @@ int main (int argc, char ** argv)
             else{
                 continue;                                   // skip to next input if input is newline
             }
+
+            for (int i = 0; i < arg_count; i++)
+            {
+                if(!strcmp(args[i], ">") && i < (arg_count - 1)){
+                    if ((output_ptr = freopen(args[i + 1], "w", stdout)) == NULL){
+                        printf("Could not open file!");
+                    }
+                }
+            }
+                        
             
             bg_exec = !strcmp(args[arg_count - 1], "&");    // set background execution to true or false
             if (bg_exec)
@@ -193,13 +205,15 @@ int main (int argc, char ** argv)
                         continue;                       // else, do not wait
                     }
             }
+            dup2(output_temp, fileno(stdout));
+            close(output_temp);
             cleanup(&args, arg_count);          // call to a function in parse.h that frees up memory
         }
         
     }
     if (batchfile)                              // check if batchfile present
     {
-        fclose(fptr);                           // close stream
+        fclose(batchfile_ptr);                           // close stream
     }
     
     return 0;                                   // end of program
