@@ -178,12 +178,6 @@ int main (int argc, char ** argv)
                         strcat(parent_env, "/customshell");             // append executable name
                         setenv("PARENT", parent_env ,1);                // put line into environment
                         free(parent_env);                               // free temporary variable
-                        
-                        if (bg_exec)
-                        {
-                            printf("\n");
-                        }
-                        
 
                         execvp(args[0], args);                          // execute command (does not work currently)
                         printf("Command did not execute\n");
