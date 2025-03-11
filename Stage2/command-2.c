@@ -35,8 +35,8 @@ int main (int argc, char ** argv)
     bool bg_exec = 0;
     bool batchfile = 0;                         // boolean that checks whether a batchfile is used
     FILE *batchfile_ptr;                        // pointer to store opened file (will probably rename to something more specific)
-    FILE *output_ptr;                           // pointer to output file
-    int output_temp = dup(fileno(stdout));
+    int output_desc = 1;
+    int stdout_desc = dup(STDOUT_FILENO);
 
     path_size = pathconf(".", _PC_PATH_MAX);         // get maximum path length from the system
     envr = malloc((size_t)path_size);                // store environment
@@ -105,10 +105,11 @@ int main (int argc, char ** argv)
 
             for (int i = 0; i < arg_count; i++)
             {
-                if(!strcmp(args[i], ">") && i < (arg_count - 1)){
-                    if ((output_ptr = freopen(args[i + 1], "w", stdout)) == NULL){
-                        printf("Could not open file!");
-                    }
+                if(!strcmp(args[i], ">") && i < (arg_count - 1) && args[i] != NULL){
+                    fflush(stdout);
+                    output_desc = open(args[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0600);
+                    dup2(output_desc, STDOUT_FILENO);
+                    break;
                 }
             }
                         
@@ -147,7 +148,11 @@ int main (int argc, char ** argv)
 
             else if (!strcmp(args[0], "echo")){         // "echo" command
                 for(int i = 1; i < arg_count; i++){     // prints every stored argument
-                    printf("%s ", args[i]);
+                    if (args[i] != NULL)
+                    {
+                        printf("%s ", args[i]);
+                    }
+                    
                 }
                 printf("\n");                           // adds a newline in the end
             }
@@ -205,8 +210,8 @@ int main (int argc, char ** argv)
                         continue;                       // else, do not wait
                     }
             }
-            dup2(output_temp, fileno(stdout));
-            close(output_temp);
+            dup2(stdout_desc, STDOUT_FILENO);
+            fflush(stdout);
             cleanup(&args, arg_count);          // call to a function in parse.h that frees up memory
         }
         

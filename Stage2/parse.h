@@ -8,6 +8,7 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include <stdbool.h>
+#include <fcntl.h>
 
 int parse(char* unparsed, char*** args, char* separators);
 void cleanup(char*** args, int argc);
