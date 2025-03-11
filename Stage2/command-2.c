@@ -37,6 +37,7 @@ int main (int argc, char ** argv)
     FILE *batchfile_ptr;                        // pointer to store opened file (will probably rename to something more specific)
     int output_desc = 1;
     int stdout_desc = dup(STDOUT_FILENO);
+    int stdin_desc = dup(STDIN_FILENO);
 
     path_size = pathconf(".", _PC_PATH_MAX);         // get maximum path length from the system
     envr = malloc((size_t)path_size);                // store environment
@@ -105,11 +106,20 @@ int main (int argc, char ** argv)
 
             for (int i = 0; i < arg_count; i++)
             {
-                if(!strcmp(args[i], ">") && i < (arg_count - 1) && args[i] != NULL){
+                if(!strcmp(args[i], ">") && i < (arg_count - 1) && strcmp(args[i], "")){
                     fflush(stdout);
                     output_desc = open(args[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0600);
                     dup2(output_desc, STDOUT_FILENO);
-                    break;
+                    strcpy(args[i], "");
+                    strcpy(args[i + 1], "");
+                }
+
+                if(!strcmp(args[i], "<") && i < (arg_count - 1) && strcmp(args[i], "")){
+                    fflush(stdin);
+                    output_desc = open(args[i + 1], O_RDONLY);
+                    dup2(output_desc, STDIN_FILENO);
+                    strcpy(args[i], "");
+                    strcpy(args[i + 1], "");
                 }
             }
                         
@@ -211,6 +221,8 @@ int main (int argc, char ** argv)
                     }
             }
             dup2(stdout_desc, STDOUT_FILENO);
+            fflush(stdout);
+            dup2(stdin_desc, STDIN_FILENO);
             fflush(stdout);
             cleanup(&args, arg_count);          // call to a function in parse.h that frees up memory
         }
