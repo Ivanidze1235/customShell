@@ -39,17 +39,17 @@ int main (int argc, char ** argv)
     int stdout_desc = dup(STDOUT_FILENO);
     int stdin_desc = dup(STDIN_FILENO);
 
-    path_size = pathconf(".", _PC_PATH_MAX);         // get maximum path length from the system
-    envr = malloc((size_t)path_size);                // store environment
-    help_path = malloc((size_t)path_size);           // store helpfile directory
-    prompt = malloc((size_t)path_size);              // store prompt
+    path_size = pathconf(".", _PC_PATH_MAX);        // get maximum path length from the system
+    envr = malloc((size_t)path_size);               // store environment
+    help_path = malloc((size_t)path_size);          // store helpfile directory
+    prompt = malloc((size_t)path_size);             // store prompt
     if ((path_bin = (char*)malloc((size_t)path_size)) != NULL){
         path = (char*)malloc((size_t)path_size);
-        path = getcwd(path, (size_t)path_size);  // get current path
+        path = getcwd(path, (size_t)path_size);     // get current path
         
-        getpath(&argv[0], path_size, &path_bin); // function that gets the
+        getpath(&argv[0], path_size, &path_bin);    // function that gets the
 
-        strcpy(envr, "");                     // create the start of the line
+        strcpy(envr, "");                           // create the start of the line
         strcat(envr, path_bin);                     // concatenate the start and the path
         strcat(envr, "/customshell");               // add file name
         setenv("SHELL", envr, 1);                   // put it in the variable list
@@ -67,7 +67,7 @@ int main (int argc, char ** argv)
         strcat(help_path, path_temp);
         free(path_temp);
         chdir(path);
-        strcat(help_path, "/manual/help.txt");   // add filename
+        strcat(help_path, "/manual/help.txt");  // add filename
 
         if(chdir(path)){                        // attempt to go back to current directory
             printf("couldn't go back\n");
@@ -77,12 +77,12 @@ int main (int argc, char ** argv)
         strcat(prompt, ": ");                   // append a semicolon (or any other prompt form)
     }
 
-    if (argv[1]){                                               // check if there is a batchfile being input
-        if ((batchfile_ptr = freopen(argv[1], "r", stdin)) == NULL){     // switch input stream to file
-            printf("Could not open file!");                     // notify if not succeeded
+    if (argv[1]){                                                       // check if there is a batchfile being input
+        if ((batchfile_ptr = freopen(argv[1], "r", stdin)) == NULL){    // switch input stream to file
+            printf("Could not open file!");                             // notify if not succeeded
         }
         else{
-            batchfile = 1;                                      // set batchfile switch to true
+            batchfile = 1;                                              // set batchfile switch to true
         }
     }
     
@@ -104,36 +104,54 @@ int main (int argc, char ** argv)
                 continue;                                   // skip to next input if input is newline
             }
 
-            for (int i = 0; i < arg_count; i++)
+            for (int i = 0; i < arg_count; i++)             // look for I/O redirection loop
             {
-                if(!strcmp(args[i], ">") && i < (arg_count - 1) && strcmp(args[i], "")){
-                    fflush(stdout);
-                    output_desc = open(args[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0600);
-                    dup2(output_desc, STDOUT_FILENO);
-                    strcpy(args[i], "");
-                    strcpy(args[i + 1], "");
-                }
+                if (args[i] != NULL)                        // skip if argument is NULL
+                {
+                    if(!strcmp(args[i], ">") && i < (arg_count - 1)){                   // output redirection (truncation)
+                        fflush(stdout);
+                        output_desc = open(args[i + 1], O_WRONLY | O_CREAT | O_TRUNC);  // open file as a descriptor
+                        dup2(output_desc, STDOUT_FILENO);                               // set stdout to this file
 
-                if(!strcmp(args[i], "<") && i < (arg_count - 1) && strcmp(args[i], "")){
-                    fflush(stdin);
-                    output_desc = open(args[i + 1], O_RDONLY);
-                    dup2(output_desc, STDIN_FILENO);
-                    strcpy(args[i], "");
-                    strcpy(args[i + 1], "");
-                }
-            }
+                        args[i] = NULL;                                                 // nullify arguments that are redirection related
+                        args[i + 1] = NULL;
+                        continue;
+                    }
+
+                    else if(!strcmp(args[i], ">>") && i < (arg_count - 1)){             // output redirection (appending)
+                        fflush(stdout);                                                 // flush unwritten data (just in case)
+                        output_desc = open(args[i + 1], O_WRONLY | O_CREAT | O_APPEND); // open file as a descriptor (with O_APPEND as parameter)
+                        dup2(output_desc, STDOUT_FILENO);                               // set stdout to this file
+
+                        args[i] = NULL;                                                 // nullify arguments that are redirection related
+                        args[i + 1] = NULL;
+                        continue;
+                    }
+    
+                    else if(!strcmp(args[i], "<") && i < (arg_count - 1)){              // input redirection
+                        fflush(stdin);
+                        output_desc = open(args[i + 1], O_RDONLY);                      // open file as a descriptor
+                        dup2(output_desc, STDIN_FILENO);                                // set stdin to this file
                         
-            
-            bg_exec = !strcmp(args[arg_count - 1], "&");    // set background execution to true or false
-            if (bg_exec)
-            {
-                args[arg_count - 1] = NULL;                 // set background execution symbol to NULL so it is not read by commands
+                        args[i] = NULL;                                                 // nullify arguments that are redirection related
+                        args[i + 1] = NULL;
+                        continue;
+                    }
+                }
             }
-            
 
-            if (!strcmp(args[0],"cd")){                     // check if argument is cd
-                if (args[1] == NULL){                       // check whether there is no parameter
-                    printf("%s", path);                     // pront out current path
+            if(args[arg_count - 1] != NULL)
+            {
+                bg_exec = !strcmp(args[arg_count - 1], "&");    // set background execution to true or false
+                if (bg_exec)
+                {
+                    args[arg_count - 1] = NULL;                 // set background execution symbol to NULL so it is not read by commands
+                }
+            }
+                       
+            if (!strcmp(args[0],"cd")){                         // check if argument is cd
+                if (args[1] == NULL){                           // check whether there is no parameter
+                    printf("%s", path);                         // pront out current path
                     printf("\n");
                 }
                 else{
@@ -174,7 +192,7 @@ int main (int argc, char ** argv)
             }
             
             else if (!strcmp(args[0],"dir")){           // "dir" command
-                system("ls -al");                           // executes ls with passed arguments
+                system("ls -al");                       // executes ls with passed arguments
                 //TODO: add parameter support
             }
 
@@ -192,10 +210,10 @@ int main (int argc, char ** argv)
                 }
             }
 
-            else if (args[0]) {                 // External command execution
+            else if (args[0]) {                         // External command execution
                                            
-                switch (fork()){                // fork to exec process
-                    case -1:                    // check for error
+                switch (fork()){                        // fork to exec process
+                    case -1:                            // check for error
                         printf("Fork didn't succeed.");
                         break;
                     case 0:
@@ -205,8 +223,7 @@ int main (int argc, char ** argv)
                         strcat(parent_env, "/customshell");             // append executable name
                         setenv("PARENT", parent_env ,1);                // put line into environment
                         free(parent_env);                               // free temporary variable
-
-                        execvp(args[0], args);                          // execute command (does not work currently)
+                        execvp(args[0], args);                          // execute command
                         printf("Command did not execute\n");
                         exit(0);                                        // exit in case command didn't execute
                     default:
@@ -220,9 +237,9 @@ int main (int argc, char ** argv)
                         continue;                       // else, do not wait
                     }
             }
-            dup2(stdout_desc, STDOUT_FILENO);
-            fflush(stdout);
-            dup2(stdin_desc, STDIN_FILENO);
+            dup2(stdout_desc, STDOUT_FILENO);   // restore stdout stream
+            fflush(stdout);                     // flush unwritten data (just in case)
+            dup2(stdin_desc, STDIN_FILENO);     // restore stdin stream
             fflush(stdout);
             cleanup(&args, arg_count);          // call to a function in parse.h that frees up memory
         }
@@ -230,7 +247,7 @@ int main (int argc, char ** argv)
     }
     if (batchfile)                              // check if batchfile present
     {
-        fclose(batchfile_ptr);                           // close stream
+        fclose(batchfile_ptr);                  // close stream
     }
     
     return 0;                                   // end of program
