@@ -109,8 +109,9 @@ int main (int argc, char ** argv)
                 if (args[i] != NULL)                        // skip if argument is NULL
                 {
                     if(!strcmp(args[i], ">") && i < (arg_count - 1)){                   // output redirection (truncation)
-                        fflush(stdout);
-                        output_desc = open(args[i + 1], O_WRONLY | O_CREAT | O_TRUNC);  // open file as a descriptor
+                        fflush(stdout);                                                 // flush unwritten data (just in case)
+                        output_desc = open(args[i + 1], 
+                            O_WRONLY | O_CREAT | O_TRUNC, 0600);                        // open file as a descriptor (last argument is permission rights)
                         dup2(output_desc, STDOUT_FILENO);                               // set stdout to this file
 
                         args[i] = NULL;                                                 // nullify arguments that are redirection related
@@ -119,8 +120,9 @@ int main (int argc, char ** argv)
                     }
 
                     else if(!strcmp(args[i], ">>") && i < (arg_count - 1)){             // output redirection (appending)
-                        fflush(stdout);                                                 // flush unwritten data (just in case)
-                        output_desc = open(args[i + 1], O_WRONLY | O_CREAT | O_APPEND); // open file as a descriptor (with O_APPEND as parameter)
+                        fflush(stdout);
+                        output_desc = open(args[i + 1], 
+                            O_WRONLY | O_CREAT | O_APPEND, 0600);                       // open file as a descriptor (with O_APPEND as parameter)
                         dup2(output_desc, STDOUT_FILENO);                               // set stdout to this file
 
                         args[i] = NULL;                                                 // nullify arguments that are redirection related
