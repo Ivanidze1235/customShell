@@ -1,8 +1,8 @@
 # Ivan Fedorov, 23735464 - Operating Systems Project 1
 # csc1021/customshell
 
-customshell: command-2.c parse.h getpath.h parse.c getpath.c
-	gcc -Wall command-2.c getpath.c parse.c -I . -o bin/customshell
+customshell: src/customshell.c src/parse.h src/getpath.h src/parse.c src/getpath.c
+	gcc -Wall src/customshell.c src/getpath.c src/parse.c -I . -o bin/customshell
 
 .PHONY: clear run
 clear:
