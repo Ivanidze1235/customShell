@@ -107,12 +107,19 @@ int main (int argc, char ** argv)
             else{
                 continue;                                   // skip to next input if input is newline
             }
-            bool err = 
+            int err = 
                 setio(arg_count, &args, &output_desc, &input_desc);// boolean that will be cheched after the loop to see if a file-related error has occured
             
             if (err)                                        // check if there was an error of some kind
             {
-                printf("An error occured when trying to open file.\n");
+                printf("An error occured.");
+                if (err == 1){
+                    printf(" Could not create file.\n");
+                }
+                else if(err == 2){
+                    printf(" Could not open file for reading.\n");
+                }
+                
                 continue;
             }
             
@@ -157,7 +164,6 @@ int main (int argc, char ** argv)
                     {
                         printf("%s ", args[i]);
                     }
-                    
                 }
                 printf("\n");                           // adds a newline in the end
             }

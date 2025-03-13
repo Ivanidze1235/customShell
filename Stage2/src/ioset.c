@@ -1,10 +1,13 @@
 #include "parse.h"
 /*
-    This function is responsible for redirecting input and output of a single command
+    This function is responsible for redirecting input and output of a single command.
+    Checks parsed arguments for redirection symbols (<, >, >>), changes I/O accordingly,
+    removes these arguments from array.
+    Returns 0 on success, 1 on failing to create file, 2 on failing to open file for reading.
 */
-bool setio(int arg_count, char*** args, int* output_desc, int* input_desc)
+int setio(int arg_count, char*** args, int* output_desc, int* input_desc)
 {
-    bool err = 0;                       // boolean that will be cheched after the loop to see if a file-related error has occured
+    int err = 0;                       // boolean that will be cheched after the loop to see if a file-related error has occured
     for (int i = 0; i < arg_count; i++) // look for I/O redirection loop
     {
         if (*(*args + i) != NULL) // skip if argument is NULL
@@ -17,7 +20,6 @@ bool setio(int arg_count, char*** args, int* output_desc, int* input_desc)
 
                 if (*output_desc == -1) // check if file was successfully opened
                 {
-                    printf("Couldn't create file!\n");
                     err = 1;
                     break;
                 }
@@ -37,7 +39,6 @@ bool setio(int arg_count, char*** args, int* output_desc, int* input_desc)
 
                 if (*output_desc == -1) // check if file was successfully opened
                 {
-                    printf("Couldn't create file!\n");
                     err = 1;
                     break;
                 }
@@ -54,8 +55,7 @@ bool setio(int arg_count, char*** args, int* output_desc, int* input_desc)
                 *input_desc = open(*(*args + i + 1), O_RDONLY); // open file as a descriptor
                 if (*input_desc == -1)                     // check if file was successfully opened
                 {
-                    printf("File not found!\n");
-                    err = 1;
+                    err = 2;
                     break;
                 }
 
