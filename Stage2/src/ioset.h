@@ -1,6 +1,11 @@
 #ifndef IOSET_H
 #define IOSET_H
-#include "parse.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdbool.h>
 
-bool setio(int arg_count, char*** args, int* output_desc, int* input_desc);
+int setio(int arg_count, char*** args, int* output_desc, int* input_desc);
 #endif

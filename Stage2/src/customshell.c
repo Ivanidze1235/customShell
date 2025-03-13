@@ -14,6 +14,7 @@
 #include "parse.h"    // custom file, contains a function that parses strings.
 #include "getpath.h"  // another custom file, contains a function that gets bin path
 #include "ioset.h"
+#include "input.h"
 
 int main (int argc, char ** argv)
 {
@@ -23,9 +24,9 @@ int main (int argc, char ** argv)
     int status;                                 // stores process status
     char ** args;                               // pointers to arg strings
     int arg_count;                              // stores amount of arguments
-    char buf[1024];                             // initialise buffer storage with maximum input size
+    char *input;                                // unparsed, dynamically allocated input
 
-    long path_size;                             // path size variable
+    long path_size;                             // path size variable (stores maximum path)
     char *path;                                 // temporary storage for the path
     
     char *path_bin;                             // stores path
@@ -37,8 +38,8 @@ int main (int argc, char ** argv)
     bool batchfile = 0;                         // boolean that checks whether a batchfile is used
     FILE *batchfile_ptr;                        // pointer to store opened file (will probably rename to something more specific)
 
-    int stdout_desc = dup(STDOUT_FILENO);
-    int stdin_desc = dup(STDIN_FILENO);
+    int stdout_desc = dup(STDOUT_FILENO);       // default stdout, return to this after execution
+    int stdin_desc = dup(STDIN_FILENO);         // default stdin, return to this after execution
 
     path_size = pathconf(".", _PC_PATH_MAX);        // get maximum path length from the system
     envr = malloc((size_t)path_size);               // store environment
@@ -99,14 +100,19 @@ int main (int argc, char ** argv)
         if (!batchfile){                                    // check if batchfile is not used
             fputs (prompt, stdout);                         // write prompt
         }
-        
-        if (fgets (buf, 1024, stdin)) {                     // read a line
-            if (buf[0] != 10){                              // check if input is newline, if not, parse
-                arg_count = parse(buf, &args, " \t\n");     // parse the input string into an array of strings (more details in parse.h)
+
+        read_input(&input);                                 // function that reads input
+
+        {
+            if (input[0]){                                  // check if input is not empty
+                arg_count = parse(input, &args, " \t\n");   // parse the input string into an array of strings (more details in parse.h)
             }
             else{
                 continue;                                   // skip to next input if input is newline
             }
+            free(input);
+            input = NULL;
+
             int err = 
                 setio(arg_count, &args, &output_desc, &input_desc);// boolean that will be cheched after the loop to see if a file-related error has occured
             
