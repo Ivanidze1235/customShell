@@ -35,7 +35,7 @@ int main (int argc, char ** argv)
     bool bg_exec = 0;
     bool batchfile = 0;                         // boolean that checks whether a batchfile is used
     FILE *batchfile_ptr;                        // pointer to store opened file (will probably rename to something more specific)
-    int output_desc = 1;
+
     int stdout_desc = dup(STDOUT_FILENO);
     int stdin_desc = dup(STDIN_FILENO);
 
@@ -92,6 +92,9 @@ int main (int argc, char ** argv)
         read input, parse it using a function, then check if it matches one of the internal
         commands, and executing the command.
         */
+        int output_desc = -1;                               // I/O file descriptor variables, set to -1 for error checking
+        int input_desc = -1;
+
         if (!batchfile){                                    // check if batchfile is not used
             fputs (prompt, stdout);                         // write prompt
         }
@@ -103,7 +106,7 @@ int main (int argc, char ** argv)
             else{
                 continue;                                   // skip to next input if input is newline
             }
-
+            bool err = 0;                                   // boolean that will be cheched after the loop to see if a file-related error has occured
             for (int i = 0; i < arg_count; i++)             // look for I/O redirection loop
             {
                 if (args[i] != NULL)                        // skip if argument is NULL
@@ -112,6 +115,14 @@ int main (int argc, char ** argv)
                         fflush(stdout);                                                 // flush unwritten data (just in case)
                         output_desc = open(args[i + 1], 
                             O_WRONLY | O_CREAT | O_TRUNC, 0600);                        // open file as a descriptor (last argument is permission rights)
+                        
+                        if (output_desc == -1)                                          // check if file was successfully opened
+                        {
+                            printf("Couldn't create file!\n");
+                            err = 1;
+                            break;
+                        }
+                        
                         dup2(output_desc, STDOUT_FILENO);                               // set stdout to this file
 
                         args[i] = NULL;                                                 // nullify arguments that are redirection related
@@ -123,6 +134,13 @@ int main (int argc, char ** argv)
                         fflush(stdout);
                         output_desc = open(args[i + 1], 
                             O_WRONLY | O_CREAT | O_APPEND, 0600);                       // open file as a descriptor (with O_APPEND as parameter)
+                        
+                        if (output_desc == -1)                                          // check if file was successfully opened
+                        {
+                            printf("Couldn't create file!\n");
+                            err = 1;
+                            break;
+                        }
                         dup2(output_desc, STDOUT_FILENO);                               // set stdout to this file
 
                         args[i] = NULL;                                                 // nullify arguments that are redirection related
@@ -132,8 +150,15 @@ int main (int argc, char ** argv)
     
                     else if(!strcmp(args[i], "<") && i < (arg_count - 1)){              // input redirection
                         fflush(stdin);
-                        output_desc = open(args[i + 1], O_RDONLY);                      // open file as a descriptor
-                        dup2(output_desc, STDIN_FILENO);                                // set stdin to this file
+                        input_desc = open(args[i + 1], O_RDONLY);                      // open file as a descriptor
+                        if (input_desc == -1)                                          // check if file was successfully opened
+                        {
+                            printf("File not found!\n");
+                            err = 1;
+                            break;
+                        }
+                
+                        dup2(input_desc, STDIN_FILENO);                                // set stdin to this file
                         
                         args[i] = NULL;                                                 // nullify arguments that are redirection related
                         args[i + 1] = NULL;
@@ -141,6 +166,12 @@ int main (int argc, char ** argv)
                     }
                 }
             }
+            if (err)                                        // check if there was an error of some kind
+            {
+                printf("An error occured when trying to open file.\n");
+                continue;
+            }
+            
 
             if(args[arg_count - 1] != NULL)
             {
