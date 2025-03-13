@@ -4,6 +4,7 @@
     Checks parsed arguments for redirection symbols (<, >, >>), changes I/O accordingly,
     removes these arguments from array.
     Returns 0 on success, 1 on failing to create file, 2 on failing to open file for reading.
+    Does not reset streams, so they need to be reset in main after execution.
 */
 int setio(int arg_count, char*** args, int* output_desc, int* input_desc)
 {

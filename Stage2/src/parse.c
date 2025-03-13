@@ -1,5 +1,3 @@
-#define MAX_ARGS 32                             // maximum amount of arguments
-
 #include "parse.h"
 
 int parse(char* unparsed, char*** args, char* separators){ 
@@ -9,17 +7,24 @@ int parse(char* unparsed, char*** args, char* separators){
     which in itself represents an array of strings.
     The function returns the amount of arguments in the parsed string.
     */ 
-    *args = calloc(MAX_ARGS, sizeof(char*));    // we allocate memory for MAX_ARGS amount of char pointers
+    int mem_size = 8;
+    *args = calloc(mem_size, sizeof(char*));    // we allocate memory for MAX_ARGS amount of char pointers
     int argc = 0;                               // initialise our counter so we can return the amount of arguments
 
     char *buf;                                  // initialise buffer for storing tokens
 
-    buf = strtok(unparsed, separators);                                // get first token
+    buf = strtok(unparsed, separators);                             // get first token
     **args = calloc(strlen(buf) + 4, sizeof(char));                 // allocate memory for first element
     strcpy(*args[0], buf);                                          // copy buffer to first element
     argc++;                                                         // increment counter
 
-    while((buf = strtok(NULL, separators))){                           // repeats the above process until there is no more string left
+    while((buf = strtok(NULL, separators))){                        // repeats the above process until there is no more string left
+        if (mem_size == (argc - 1))
+        {
+            mem_size = mem_size + 8;
+            *args = realloc(*args, mem_size * sizeof(char*));       // increase array size if running out of space
+        }
+        
         *(*args + argc) = calloc(strlen(buf) + 4, sizeof(char));    // allocate memory for next element
         strcpy(*(*args + argc), buf);                               // copy buffer to element
         argc++;                                                     // increment counter
