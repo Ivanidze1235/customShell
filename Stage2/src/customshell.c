@@ -138,6 +138,9 @@ int main (int argc, char ** argv)
                     args[arg_count - 1] = NULL;                 // set background execution symbol to NULL so it is not read by commands
                 }
             }
+            /*
+            Commands start here
+            */
                        
             if (!strcmp(args[0],"cd")){                         // check if argument is cd
                 if (args[1] == NULL){                           // check whether there is no parameter
@@ -181,8 +184,21 @@ int main (int argc, char ** argv)
             }
             
             else if (!strcmp(args[0],"dir")){           // "dir" command
-                system("ls -al");                       // executes ls with passed arguments
-                //TODO: add parameter support
+                if (args[1])                            // check if there is an argument
+                {
+                    char* dir_to = calloc(strlen(args[1]) + strlen("ls -al "), sizeof(char));   // add argument to prompt
+                    strcpy(dir_to, "ls -al ");
+                    strcat(dir_to, args[1]);
+                    if (system(dir_to))                                                         // try to list given directory
+                    {
+                        printf("directory \"%s\" does not exist.\n", args[1]);                  // notify user if it does not exist
+                    }
+                    free(dir_to);                                                               // free memory
+                    dir_to = NULL;
+                }
+                else{
+                    system("ls -al");
+                }
             }
 
             else if (!strcmp(args[0],"environ")){       // "environ" command, prints all environment variables
