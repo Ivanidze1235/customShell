@@ -1,7 +1,7 @@
 /*
     Shell by Ivan Fedorov
     Reads a line from input, splits it into tokens, stores the separated string in an array,
-    checks if it is a known command, if it is, executes the command. 
+    checks if it is a known command, if it is, executes the command.
     Heavily inspired by 'strtokeg' program by Ian G Graham
     *******************************************************
 
@@ -28,7 +28,7 @@ int main (int argc, char ** argv)
 
     long path_size;                             // path size variable (stores maximum path)
     char *path;                                 // temporary storage for the path
-    
+
     char *path_bin;                             // stores path
     char *prompt;                               // stores prompt (derivative of path)
     char *envr;                                 // environment storage. used to write shell path into environ variable
@@ -48,7 +48,7 @@ int main (int argc, char ** argv)
     if ((path_bin = (char*)malloc((size_t)path_size)) != NULL){
         path = (char*)malloc((size_t)path_size);
         path = getcwd(path, (size_t)path_size);     // get current path
-        
+
         getpath(&argv[0], path_size, &path_bin);    // function that gets the
 
         strcpy(envr, "");                           // create the start of the line
@@ -87,7 +87,7 @@ int main (int argc, char ** argv)
             batchfile = 1;                                              // set batchfile switch to true
         }
     }
-    
+
     while (!feof(stdin)) {
         /*
         This is the main loop, where we print the prompt (if not in batchfile mode),
@@ -104,18 +104,19 @@ int main (int argc, char ** argv)
         read_input(&input);                                 // function that reads input
 
         {
-            if (input[0]){                                  // check if input is not empty
-                arg_count = parse(input, &args, " \t\n");   // parse the input string into an array of strings (more details in parse.h)
+
+            arg_count = parse(input, &args, " \t\n");   // parse the input string into an array of strings (more details in parse.h)
+            if (arg_count == -1)
+            {
+                continue;
             }
-            else{
-                continue;                                   // skip to next input if input is newline
-            }
+
             free(input);
             input = NULL;
 
-            int err = 
+            int err =
                 setio(arg_count, &args, &output_desc, &input_desc);// boolean that will be cheched after the loop to see if a file-related error has occured
-            
+
             if (err)                                        // check if there was an error of some kind
             {
                 printf("An error occured.");
@@ -125,10 +126,10 @@ int main (int argc, char ** argv)
                 else if(err == 2){
                     printf(" Could not open file for reading.\n");
                 }
-                
+
                 continue;
             }
-            
+
 
             if(args[arg_count - 1] != NULL)
             {
@@ -141,7 +142,7 @@ int main (int argc, char ** argv)
             /*
             Commands start here
             */
-                       
+
             if (!strcmp(args[0],"cd")){                         // check if argument is cd
                 if (args[1] == NULL){                           // check whether there is no parameter
                     printf("%s", path);                         // pront out current path
@@ -162,7 +163,7 @@ int main (int argc, char ** argv)
             else if (!strcmp(args[0],"clr")) {          // "clr" command
                 system("clear");                        // makes a system call to clear the screen.
             }
-         
+
             else if (!strcmp(args[0],"quit")) {         // "quit" command
                 return 0;
             }
@@ -182,7 +183,7 @@ int main (int argc, char ** argv)
                 getchar();                              // waits for ENTER to be pressed
                 continue;
             }
-            
+
             else if (!strcmp(args[0],"dir")){           // "dir" command
                 if (args[1])                            // check if there is an argument
                 {
@@ -192,6 +193,7 @@ int main (int argc, char ** argv)
                     if (system(dir_to))                                                         // try to list given directory
                     {
                         printf("directory \"%s\" does not exist.\n", args[1]);                  // notify user if it does not exist
+                        continue;
                     }
                     free(dir_to);                                                               // free memory
                     dir_to = NULL;
@@ -210,13 +212,13 @@ int main (int argc, char ** argv)
             }
 
             else if (!strcmp(args[0],"help")){          // "help" command
-                if(system(help_path)){                  // system call the help method        
+                if(system(help_path)){                  // system call the help method
                     printf("Could not read help file.\n");  // notify in case it did not succeed
                 }
             }
 
             else if (args[0]) {                         // External command execution
-                                           
+
                 switch (fork()){                        // fork to exec process
                     case -1:                            // check for error
                         printf("Fork didn't succeed.");
@@ -242,18 +244,19 @@ int main (int argc, char ** argv)
                         continue;                       // else, do not wait
                     }
             }
+
             dup2(stdout_desc, STDOUT_FILENO);   // restore stdout stream
             fflush(stdout);                     // flush unwritten data (just in case)
             dup2(stdin_desc, STDIN_FILENO);     // restore stdin stream
             fflush(stdout);
             cleanup(&args, arg_count);          // call to a function in parse.h that frees up memory
         }
-        
+
     }
     if (batchfile)                              // check if batchfile present
     {
         fclose(batchfile_ptr);                  // close stream
     }
-    
+
     return 0;                                   // end of program
 }

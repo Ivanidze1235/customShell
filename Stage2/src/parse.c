@@ -7,6 +7,12 @@ int parse(char* unparsed, char*** args, char* separators){
     which in itself represents an array of strings.
     The function returns the amount of arguments in the parsed string.
     */ 
+
+    if (!strcmp(unparsed, ""))
+    {
+        return -1;
+    }
+    
     int mem_size = 8;
     *args = calloc(mem_size, sizeof(char*));    // we allocate memory for MAX_ARGS amount of char pointers
     int argc = 0;                               // initialise our counter so we can return the amount of arguments
