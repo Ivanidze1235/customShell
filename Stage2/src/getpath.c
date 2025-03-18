@@ -11,6 +11,12 @@ void getpath(char** argv, size_t path_size, char** path_bin){
     int argv_count;
 
     argv_count = parse(argv[0], &argv_split, "/");      // splitting first argument into parts so the path can be retrieved
+    if (argv_count == -1)
+    {
+        printf("Error: program name is empty");
+        return;
+    }
+    
     char *cd_to = malloc((size_t)path_size);            // variable to store relative path
     for (int i = 0; i < (argv_count - 1); i++)          // loop that reconstructs the path
     {
