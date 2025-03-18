@@ -248,7 +248,7 @@ int main (int argc, char ** argv)
             dup2(stdout_desc, STDOUT_FILENO);   // restore stdout stream
             fflush(stdout);                     // flush unwritten data (just in case)
             dup2(stdin_desc, STDIN_FILENO);     // restore stdin stream
-            fflush(stdout);
+            fflush(stdin);
             cleanup(&args, arg_count);          // call to a function in parse.h that frees up memory
         }
 
