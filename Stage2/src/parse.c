@@ -52,6 +52,29 @@ int parse(char* unparsed, char*** args, char* separators){
     return argc;        // our counter represents the amount of arguments, so we return it to use in the main function
 }
 
+int shift_nulls(char*** args, int arg_count){
+    /*
+    This function removes nulls from the argument array, returns new amount of arguments
+    */
+    int temp_arg_count = 0;
+    char **args_new = calloc(arg_count, sizeof(char*));
+    for (int i = 0; i < arg_count; i++)
+    {
+        if (*(*args + i) != NULL)
+        {
+            args_new[temp_arg_count] = calloc(strlen(*(*args + i)), sizeof(char));
+            strcpy(args_new[temp_arg_count], *(*args + i));
+            temp_arg_count++;
+        }
+    }
+    
+    cleanup(args, arg_count);
+    arg_count = temp_arg_count;
+    *args = args_new;
+    args_new = NULL;
+    return arg_count;
+}
+
 void cleanup(char*** args, int argc){
     /*
         This function cleans up the argument array created by the parse function.

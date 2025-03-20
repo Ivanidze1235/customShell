@@ -11,6 +11,7 @@
 #include <fcntl.h>
 
 int parse(char* unparsed, char*** args, char* separators);
+int shift_nulls(char*** args, int arg_count);
 void cleanup(char*** args, int argc);
 
 #endif

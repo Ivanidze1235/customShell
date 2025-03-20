@@ -139,6 +139,9 @@ int main (int argc, char ** argv)
                     args[arg_count - 1] = NULL;                 // set background execution symbol to NULL so it is not read by commands
                 }
             }
+
+            shift_nulls(&args, arg_count);                      // function that removes unnecessary NULLs in the middle of the argument array
+            
             /*
             Commands start here
             */
