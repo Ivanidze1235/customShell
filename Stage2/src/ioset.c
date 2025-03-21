@@ -6,13 +6,14 @@
     Returns 0 on success, 1 on failing to create file, 2 on failing to open file for reading.
     Does not reset streams, so they need to be reset in main after execution.
 */
-int setio(int arg_count, char*** args, int* output_desc, int* input_desc)
+int setio(int arg_count, char*** args, int* output_desc, int* input_desc, bool* stdout_flag, bool* stdin_flag)
 {
     int err = 0;                                                // boolean that will be cheched after the loop to see if a file-related error has occured
     for (int i = 0; i < arg_count; i++)                         // look for I/O redirection loop
     {
         if (*(*args + i) != NULL)                               // skip if argument is NULL
         {
+            *stdout_flag = true;
             if (!strcmp(*(*args + i), ">") && i < (arg_count - 1))
             {                                                   // output redirection (truncation)
                 fflush(stdout);                                 // flush unwritten data (just in case)
@@ -34,6 +35,7 @@ int setio(int arg_count, char*** args, int* output_desc, int* input_desc)
 
             else if (!strcmp(*(*args + i), ">>") && i < (arg_count - 1))    // output redirection (appending)
             {
+                *stdout_flag = true;
                 fflush(stdout);
                 *output_desc = open(*(*args + i + 1),
                                    O_WRONLY | O_CREAT | O_APPEND, 0600);    // open file as a descriptor (with O_APPEND as parameter)
@@ -52,6 +54,7 @@ int setio(int arg_count, char*** args, int* output_desc, int* input_desc)
 
             else if (!strcmp(*(*args + i), "<") && i < (arg_count - 1))     // input redirection
             {
+                *stdin_flag = true;
                 fflush(stdin);
                 *input_desc = open(*(*args + i + 1), O_RDONLY);             // open file as a descriptor
                 if (*input_desc == -1)                                      // check if file was successfully opened

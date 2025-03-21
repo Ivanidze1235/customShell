@@ -18,6 +18,7 @@ int parse(char* unparsed, char*** args, char* separators){
     if (!(*args))
     {
         printf("Could not allocate memory for parsed input.\n");
+        return -1;
     }
     
     int argc = 0;                               // initialise our counter so we can return the amount of arguments
@@ -38,6 +39,7 @@ int parse(char* unparsed, char*** args, char* separators){
             if (!(*args))
             {
                 printf("Could not allocate memory for parsed input.\n");
+                return -1;
             }
         }
         
@@ -45,6 +47,7 @@ int parse(char* unparsed, char*** args, char* separators){
         if (!(*(*args + argc)))
         {
             printf("Could not allocate memory for parsed element.\n");
+            return -1;
         }
         strcpy(*(*args + argc), buf);                               // copy buffer to element
         argc++;                                                     // increment counter
@@ -57,22 +60,33 @@ int shift_nulls(char*** args, int arg_count){
     This function removes nulls from the argument array, returns new amount of arguments
     */
     int temp_arg_count = 0;
-    char **args_new = calloc(arg_count, sizeof(char*));
-    for (int i = 0; i < arg_count; i++)
+    char **args_new = calloc(arg_count, sizeof(char*));             // allocate memory for all elements of old array
+    if (!args_new)
     {
-        if (*(*args + i) != NULL)
+        printf("Could not allocate memory when swapping arrays.\n");
+        return -1;
+    }
+    
+    for (int i = 0; i < arg_count; i++)                             // loop through all elements of old array
+    {
+        if (*(*args + i) != NULL)                                   // get all non-NULL elements
         {
-            args_new[temp_arg_count] = calloc(strlen(*(*args + i)), sizeof(char));
-            strcpy(args_new[temp_arg_count], *(*args + i));
+            args_new[temp_arg_count] = calloc(strlen(*(*args + i)), sizeof(char));  // allocate memory for element
+            if (!args_new[temp_arg_count])
+            {
+                printf("Could not allocate memory when swapping arrays.\n");
+                return -1;
+            }
+            strcpy(args_new[temp_arg_count], *(*args + i));                         // copy element
             temp_arg_count++;
         }
     }
     
-    cleanup(args, arg_count);
+    cleanup(args, arg_count);                                       // wipe old array
     arg_count = temp_arg_count;
-    *args = args_new;
-    args_new = NULL;
-    return arg_count;
+    *args = args_new;                                               // update pointer
+    args_new = NULL;                                                // nullify temporary pointer
+    return arg_count;                                               // return new amount of elements
 }
 
 void cleanup(char*** args, int argc){

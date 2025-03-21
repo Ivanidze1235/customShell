@@ -13,8 +13,8 @@
 
 #include "parse.h"    // custom file, contains a function that parses strings.
 #include "getpath.h"  // another custom file, contains a function that gets bin path
-#include "ioset.h"
-#include "input.h"
+#include "ioset.h"    // file with function that redirects I/O
+#include "input.h"    // file with input reading function
 
 int main (int argc, char ** argv)
 {
@@ -40,6 +40,9 @@ int main (int argc, char ** argv)
 
     int stdout_desc = dup(STDOUT_FILENO);       // default stdout, return to this after execution
     int stdin_desc = dup(STDIN_FILENO);         // default stdin, return to this after execution
+
+    bool stdout_flag = false;
+    bool stdin_flag = false;
 
     path_size = pathconf(".", _PC_PATH_MAX);        // get maximum path length from the system
     envr = malloc((size_t)path_size);               // store environment
@@ -89,6 +92,7 @@ int main (int argc, char ** argv)
     }
 
     while (!feof(stdin)) {
+
         /*
         This is the main loop, where we print the prompt (if not in batchfile mode),
         read input, parse it using a function, then check if it matches one of the internal
@@ -100,30 +104,34 @@ int main (int argc, char ** argv)
         if (!batchfile){                                    // check if batchfile is not used
             fputs (prompt, stdout);                         // write prompt
         }
-
         read_input(&input);                                 // function that reads input
-
         {
 
             arg_count = parse(input, &args, " \t\n");   // parse the input string into an array of strings (more details in parse.h)
-            if (arg_count == -1)
-            {
-                continue;
+            if (arg_count == -1)                        // check if no input provided, skip to next input if so
+            {   
+                if (!batchfile)
+                {
+                    continue;
+                }
+                else{
+                    return 0;
+                }
             }
 
-            free(input);
+            free(input);                                // don't need unparsed input anymore so it is freed
             input = NULL;
 
-            int err =
-                setio(arg_count, &args, &output_desc, &input_desc);// boolean that will be cheched after the loop to see if a file-related error has occured
+            int IOerr =                                 // check for I/O redirection
+                setio(arg_count, &args, &output_desc, &input_desc, &stdout_flag, &stdin_flag);
 
-            if (err)                                        // check if there was an error of some kind
+            if (IOerr)                                  // check if there was an error of some kind
             {
                 printf("An error occured.");
-                if (err == 1){
+                if (IOerr == 1){
                     printf(" Could not create file.\n");
                 }
-                else if(err == 2){
+                else if(IOerr == 2){
                     printf(" Could not open file for reading.\n");
                 }
 
@@ -141,7 +149,7 @@ int main (int argc, char ** argv)
             }
 
             shift_nulls(&args, arg_count);                      // function that removes unnecessary NULLs in the middle of the argument array
-            
+
             /*
             Commands start here
             */
@@ -247,14 +255,22 @@ int main (int argc, char ** argv)
                         continue;                       // else, do not wait
                     }
             }
-
-            dup2(stdout_desc, STDOUT_FILENO);   // restore stdout stream
-            fflush(stdout);                     // flush unwritten data (just in case)
-            dup2(stdin_desc, STDIN_FILENO);     // restore stdin stream
-            fflush(stdin);
+            if (stdout_flag)
+            {
+                dup2(stdout_desc, STDOUT_FILENO);   // restore stdout stream
+                fflush(stdout);                     // flush unwritten data (just in case)
+                stdout_flag = false;
+            }
+            if (stdin_flag)
+            {
+                dup2(stdin_desc, STDIN_FILENO);     // restore stdin stream
+                fflush(stdin);
+                stdin_flag = false;
+            }
+            
             cleanup(&args, arg_count);          // call to a function in parse.h that frees up memory
         }
-
+        
     }
     if (batchfile)                              // check if batchfile present
     {

@@ -14,15 +14,10 @@ void read_input(char** input){
         printf("Could not read input.\n");
     }
     
-
-    while((buf = fgetc(stdin)) != '\n'){                // get characters until newline found
+    while((buf = getc(stdin)) != EOF && buf != '\n'){                         // get characters until newline found
         int str_len = strlen(*input);
         *(*input + str_len) = buf;
         *(*input + str_len + 1) = '\0';          // append new character
-        if (!(*input))
-        {
-            printf("Could not read input.\n");
-        }
         if (str_len == (size_input - 1))         // check if running out of allocated memory
         {
             size_input += 64;
