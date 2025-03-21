@@ -85,8 +85,10 @@ int main (int argc, char ** argv)
     if (argv[1]){                                                       // check if there is a batchfile being input
         if ((batchfile_ptr = freopen(argv[1], "r", stdin)) == NULL){    // switch input stream to file
             printf("Could not open file!");                             // notify if not succeeded
+
         }
         else{
+            stdin_desc = open(argv[1], O_RDONLY);
             batchfile = 1;                                              // set batchfile switch to true
         }
     }
