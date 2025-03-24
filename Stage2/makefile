@@ -1,4 +1,5 @@
 # Ivan Fedorov, 23735464 - Operating Systems Project 1
+# I acknowledge the DCU Academic Integrity Policy
 # csc1021/customshell
 
 customshell: src/*

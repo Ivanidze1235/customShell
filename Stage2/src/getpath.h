@@ -1,3 +1,8 @@
+/*
+    Ivan Fedorov
+    23735465
+    I acknowledge the DCU Academic Integrity Policy
+*/
 #ifndef GETPATH_H
 #define GETPATH_H
 

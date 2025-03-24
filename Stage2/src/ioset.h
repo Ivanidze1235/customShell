@@ -1,3 +1,8 @@
+/*
+    Ivan Fedorov
+    23735465
+    I acknowledge the DCU Academic Integrity Policy
+*/
 #ifndef IOSET_H
 #define IOSET_H
 #include <string.h>

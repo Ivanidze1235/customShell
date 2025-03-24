@@ -1,3 +1,8 @@
+/*
+    Ivan Fedorov
+    23735465
+    I acknowledge the DCU Academic Integrity Policy
+*/
 #define MAX_ARGS 32                             // maximum amount of arguments
 
 int parse(char* unparsed, char*** args){ 

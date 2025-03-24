@@ -1,3 +1,8 @@
+/*
+    Ivan Fedorov
+    23735465
+    I acknowledge the DCU Academic Integrity Policy
+*/
 #include "parse.h"
 
 void getpath(char** argv, size_t path_size, char** path_bin){

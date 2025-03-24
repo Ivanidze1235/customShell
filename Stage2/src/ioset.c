@@ -1,3 +1,8 @@
+/*
+    Ivan Fedorov
+    23735465
+    I acknowledge the DCU Academic Integrity Policy
+*/
 #include "ioset.h"
 /*
     This function is responsible for redirecting input and output of a single command.

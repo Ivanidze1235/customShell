@@ -1,14 +1,7 @@
 /*
-    Shell by Ivan Fedorov
-    Reads a line from input, splits it into tokens, stores the separated string in an array,
-    checks if it is a known command, if it is, executes the command.
-    Heavily inspired by 'strtokeg' program by Ian G Graham
-    *******************************************************
-
-    Date: February 2025
-    Author: Ivan Fedorov
-    Dublin City University
-    ivan.fedorov2@mail.dcu.ie
+    Ivan Fedorov
+    23735465
+    I acknowledge the DCU Academic Integrity Policy
 */
 
 #include "parse.h"    // custom file, contains a function that parses strings.
